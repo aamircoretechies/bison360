@@ -11,7 +11,7 @@ const nextConfig = {
   /* basePath: '/bison360',
   assetPrefix: '/bison360/', */
    
-  output: 'export',
+  output: 'standalone',
   trailingSlash: true,
   images: {
     unoptimized: true
