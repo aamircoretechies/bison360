@@ -92,7 +92,6 @@
     "zod": "^3.25.57"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^15.4.5",
     "@prisma/client": "^6.9.0",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/bcrypt": "^5.0.2",
