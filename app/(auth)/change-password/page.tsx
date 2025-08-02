@@ -23,6 +23,7 @@ import {
   getChangePasswordSchema,
 } from '../forms/change-password-schema';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 export default function Page() {
   const router = useRouter();
@@ -104,6 +105,7 @@ export default function Page() {
   }
 
   return (
+      <Suspense fallback={<div>Loading...</div>}>
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -240,5 +242,6 @@ export default function Page() {
         )}
       </form>
     </Form>
+    </Suspense>
   );
 }
