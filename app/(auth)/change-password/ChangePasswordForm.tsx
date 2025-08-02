@@ -1,13 +1,13 @@
-/* 'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { apiFetch } from '@/lib/api';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle, Check, Eye, EyeOff, LoaderCircleIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { apiFetch } from "@/lib/api";
+import { Alert, AlertIcon, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,20 +15,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { LoaderCircleIcon } from 'lucide-react';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   ChangePasswordSchemaType,
   getChangePasswordSchema,
-} from '../forms/change-password-schema';
-import Link from 'next/link';
-import { Suspense } from 'react';
+} from "../forms/change-password-schema";
+import Link from "next/link";
 
-export default function Page() {
+export default function ChangePasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams?.get('token') || null;
+  const token = searchParams?.get("token") || null;
 
   const [verifyingToken, setVerifyingToken] = useState(false);
   const [isValidToken, setIsValidToken] = useState(false);
@@ -42,8 +40,8 @@ export default function Page() {
   const form = useForm<ChangePasswordSchemaType>({
     resolver: zodResolver(getChangePasswordSchema()),
     defaultValues: {
-      newPassword: '',
-      confirmPassword: '',
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
@@ -52,9 +50,9 @@ export default function Page() {
       try {
         setVerifyingToken(true);
 
-        const response = await apiFetch('/api/auth/reset-password-verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await apiFetch("/api/auth/reset-password-verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
         });
 
@@ -62,10 +60,10 @@ export default function Page() {
           setIsValidToken(true);
         } else {
           const errorData = await response.json();
-          setError(errorData.message || 'Invalid or expired token.');
+          setError(errorData.message || "Invalid or expired token.");
         }
       } catch {
-        setError('Unable to verify the reset token.');
+        setError("Unable to verify the reset token.");
       } finally {
         setVerifyingToken(false);
       }
@@ -74,7 +72,7 @@ export default function Page() {
     if (token) {
       verifyToken();
     } else {
-      setError('No reset token provided.');
+      setError("No reset token provided.");
     }
   }, [token]);
 
@@ -84,28 +82,27 @@ export default function Page() {
     setSuccessMessage(null);
 
     try {
-      const response = await apiFetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await apiFetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword: values.newPassword }),
       });
 
       if (response.ok) {
-        setSuccessMessage('Password reset successful! Redirecting to login...');
-        setTimeout(() => router.push('/signin'), 3000);
+        setSuccessMessage("Password reset successful! Redirecting to login...");
+        setTimeout(() => router.push("/signin"), 3000);
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Password reset failed.');
+        setError(errorData.message || "Password reset failed.");
       }
     } catch {
-      setError('An error occurred while resetting the password.');
+      setError("An error occurred while resetting the password.");
     } finally {
       setIsProcessing(false);
     }
   }
 
   return (
-      <Suspense fallback={<div>Loading...</div>}>
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
@@ -150,7 +147,7 @@ export default function Page() {
             <AlertIcon>
               <LoaderCircleIcon className="size-4 animate-spin" />
             </AlertIcon>
-            <AlertTitle>Verifing...</AlertTitle>
+            <AlertTitle>Verifying...</AlertTitle>
           </Alert>
         )}
 
@@ -165,7 +162,7 @@ export default function Page() {
                   <div className="relative">
                     <FormControl>
                       <Input
-                        type={passwordVisible ? 'text' : 'password'}
+                        type={passwordVisible ? "text" : "password"}
                         placeholder="Enter new password"
                         {...field}
                       />
@@ -177,7 +174,7 @@ export default function Page() {
                       onClick={() => setPasswordVisible(!passwordVisible)}
                       className="absolute end-0 top-1/2 -translate-y-1/2 h-7 w-7 me-1.5 bg-transparent!"
                       aria-label={
-                        passwordVisible ? 'Hide password' : 'Show password'
+                        passwordVisible ? "Hide password" : "Show password"
                       }
                     >
                       {passwordVisible ? (
@@ -201,7 +198,7 @@ export default function Page() {
                   <div className="relative">
                     <FormControl>
                       <Input
-                        type={passwordConfirmationVisible ? 'text' : 'password'}
+                        type={passwordConfirmationVisible ? "text" : "password"}
                         placeholder="Confirm new password"
                         {...field}
                       />
@@ -212,14 +209,14 @@ export default function Page() {
                       mode="icon"
                       onClick={() =>
                         setPasswordConfirmationVisible(
-                          !passwordConfirmationVisible,
+                          !passwordConfirmationVisible
                         )
                       }
                       className="absolute end-0 top-1/2 -translate-y-1/2 h-7 w-7 me-1.5 bg-transparent!"
                       aria-label={
                         passwordConfirmationVisible
-                          ? 'Hide password confirmation'
-                          : 'Show password confirmation'
+                          ? "Hide password confirmation"
+                          : "Show password confirmation"
                       }
                     >
                       {passwordConfirmationVisible ? (
@@ -235,25 +232,14 @@ export default function Page() {
             />
 
             <Button type="submit" disabled={isProcessing} className="w-full">
-              {isProcessing && <LoaderCircleIcon className="size-4 animate-spin" />}
+              {isProcessing && (
+                <LoaderCircleIcon className="size-4 animate-spin" />
+              )}
               Reset Password
             </Button>
           </>
         )}
       </form>
     </Form>
-    </Suspense>
-  );
-}
- */
-
-import { Suspense } from "react";
-import ChangePasswordForm from "./ChangePasswordForm";
-
-export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ChangePasswordForm />
-    </Suspense>
   );
 }
