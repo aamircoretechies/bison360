@@ -25,7 +25,7 @@ export function Demo1LightSidebarContent() {
     <div className="grid gap-5 lg:gap-7.5">
       <div className="grid lg:grid-cols-3 gap-y-5 lg:gap-7.5 items-stretch">
         <div className="lg:col-span-3">
-          <div className="grid grid-cols-4 gap-5 lg:gap-7.5 h-full items-stretch">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-7.5 h-full items-stretch">
             <ChannelStats />
           </div>
         </div>
