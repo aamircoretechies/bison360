@@ -1,4 +1,4 @@
-import { ReactNode, Suspense } from 'react';
+/* import { ReactNode, Suspense } from 'react';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { SettingsProvider } from '@/providers/settings-provider';
@@ -55,3 +55,58 @@ export default async function RootLayout({
     </html>
   );
 }
+ */
+
+// app/layout.tsx
+import { ReactNode } from "react";
+import { Inter } from "next/font/google";
+import { cn } from "@/lib/utils";
+import "@/css/styles.css";
+import "@/components/keenicons/assets/styles.css";
+import { Metadata } from "next";
+
+import { ThemeProvider } from "@/providers/theme-provider";
+import { AuthProvider } from "@/providers/auth-provider";
+import { SettingsProvider } from "@/providers/settings-provider";
+import { I18nProvider } from "@/providers/i18n-provider";
+import { ModulesProvider } from "@/providers/modules-provider";
+import { QueryProvider } from "@/providers/query-provider";
+
+const inter = Inter({ subsets: ["latin"], display: "swap" });
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Bison360",
+    default: "Bison360",
+  },
+};
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body
+        className={cn(
+          "antialiased flex h-full text-base text-foreground bg-background",
+          inter.className
+        )}
+
+        suppressHydrationWarning
+      >
+        <QueryProvider>
+          <AuthProvider>
+            <SettingsProvider>
+              <ThemeProvider>
+                <I18nProvider>
+                  <ModulesProvider>
+                    {children}
+                  </ModulesProvider>
+                </I18nProvider>
+              </ThemeProvider>
+            </SettingsProvider>
+          </AuthProvider>
+        </QueryProvider>
+      </body>
+    </html>
+  );
+}
+

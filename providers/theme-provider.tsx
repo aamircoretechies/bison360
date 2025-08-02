@@ -1,5 +1,4 @@
 'use client';
-'use client';
 
 import * as React from 'react';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
@@ -7,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 export function ThemeProvider({
   children,
+  ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
     <NextThemesProvider
@@ -16,8 +16,11 @@ export function ThemeProvider({
       enableSystem
       disableTransitionOnChange
       enableColorScheme
+      {...props}
     >
-      <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+      <TooltipProvider delayDuration={0}>
+        {children}
+      </TooltipProvider>
     </NextThemesProvider>
   );
 }
