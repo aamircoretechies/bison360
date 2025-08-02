@@ -7,7 +7,7 @@ import { useMenu } from '@/hooks/use-menu';
 
 const Toolbar = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="flex flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
+    <div className="flex flex-col sm:flex-row flex-wrap items-center lg:items-end justify-between gap-5 pb-7.5">
       {children}
     </div>
   );

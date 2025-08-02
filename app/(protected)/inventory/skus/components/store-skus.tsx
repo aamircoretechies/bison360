@@ -500,7 +500,7 @@ const StoreProductsSkus = () => {
       <Card>
         <CardHeader>
           <CardHeading>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 py-2">
               <div className="relative">
                 <Search className="size-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2" />
                 <Input

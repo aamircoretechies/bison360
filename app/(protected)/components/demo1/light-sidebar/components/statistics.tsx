@@ -19,8 +19,8 @@ const Statistics = ({ details }: IStatisticsProps) => {
   const renderData = (item: IStatisticsItem, index: number) => {
     return (
       <React.Fragment key={index}>
-        <div className="grid md:flex-1">
-          <div className="flex justify-self-center items-center gap-3">
+        <div className="flex flex-col md:flex-row items-center gap-3 flex-1 min-w-[200px] ">
+          <div className="flex w-full justify-self-center items-center gap-3">
             <img
               src={toAbsoluteUrl(`/media/png/${item.image}`)}
               className="h-10 max-w-full"
@@ -36,7 +36,7 @@ const Statistics = ({ details }: IStatisticsProps) => {
             </div>
           </div>
         </div>
-        <span className="not-last:border-e border-e-input my-1"></span>
+       {/*  <span className="not-last:border-e border-e-input my-1"></span> */}
       </React.Fragment>
     );
   };
@@ -44,7 +44,7 @@ const Statistics = ({ details }: IStatisticsProps) => {
   return (
     <Card>
       <CardContent>
-        <div className="flex flex-wrap px-5 lg:px-10 py-1 gap-2">
+       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 px-5 lg:px-10 py-4">
           {details.map((item, index) => {
             return renderData(item, index);
           })}
