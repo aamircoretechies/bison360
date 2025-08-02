@@ -26,8 +26,12 @@ import { getSigninSchema, SigninSchemaType } from '../forms/signin-schema';
 import { getCsrfToken } from "next-auth/react";
 
 export default async function Page() {
+  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/csrf`, {
+    cache: "no-store", // don't cache, always fresh
+  });
+  const data = await res.json();
+  const csrfToken = data?.csrfToken;
   const router = useRouter();
-  const csrfToken = await getCsrfToken();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
