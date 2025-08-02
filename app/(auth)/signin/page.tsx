@@ -23,8 +23,9 @@ import { Input } from '@/components/ui/input';
 import { LoaderCircleIcon } from 'lucide-react';
 import { Icons } from '@/components/common/icons';
 import { getSigninSchema, SigninSchemaType } from '../forms/signin-schema';
+import { getCsrfToken } from "next-auth/react";
 
-export default function Page() {
+export default function Page({ csrfToken }: { csrfToken: string }) {
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -74,6 +75,7 @@ export default function Page() {
         onSubmit={form.handleSubmit(onSubmit)}
         className="block w-full space-y-5"
       >
+        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
         <div className="space-y-1.5 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
             Sign in to <span className='text-primary'>Bison360</span>

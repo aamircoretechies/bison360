@@ -17,7 +17,9 @@ const authOptions: NextAuthOptions = {
         rememberMe: { label: 'Remember me', type: 'boolean' },
       },
       async authorize(credentials) {
+           console.log("🟢 authorize() called with:", credentials);
         if (!credentials || !credentials.email || !credentials.password) {
+           console.log("🔴 Missing email or password");
           throw new Error(
             JSON.stringify({
               code: 400,
@@ -27,10 +29,13 @@ const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
+          
           where: { email: credentials.email },
         });
+          console.log("🟡 User found:", user);
 
         if (!user) {
+              console.log("🔴 No user found for email:", credentials.email);
           throw new Error(
             JSON.stringify({
               code: 404,
@@ -43,6 +48,7 @@ const authOptions: NextAuthOptions = {
           credentials.password,
           user.password || '',
         );
+          console.log("🟣 Password valid?", isPasswordValid);
 
         if (!isPasswordValid) {
           throw new Error(
@@ -54,6 +60,7 @@ const authOptions: NextAuthOptions = {
         }
 
         if (user.status !== 'ACTIVE') {
+             console.log("🔴 User not active:", user.status);
           throw new Error(
             JSON.stringify({
               code: 403,
@@ -61,7 +68,7 @@ const authOptions: NextAuthOptions = {
             }),
           );
         }
-
+  console.log("✅ Login successful for:", user.email);
         // Update `lastSignInAt` field
         await prisma.user.update({
           where: { id: user.id },
