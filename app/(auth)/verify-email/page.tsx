@@ -1,4 +1,4 @@
-'use client';
+/* 'use client';
 
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/dist/client/link';
@@ -86,6 +86,18 @@ export default function Page() {
           </Alert>
         )}
       </div>
+    </Suspense>
+  );
+}
+ */
+
+import { Suspense } from "react";
+import VerifyEmailClient from "./VerifyEmailForm";
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyEmailClient />
     </Suspense>
   );
 }
