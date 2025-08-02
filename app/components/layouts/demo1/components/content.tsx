@@ -11,7 +11,7 @@ export function Content({ children }: { children: ReactNode }) {
   return (
     <div className="grow content pt-5" role="content">
       {mobile && (
-        <Container>
+        <Container >
           <Breadcrumb />
         </Container>
       )}

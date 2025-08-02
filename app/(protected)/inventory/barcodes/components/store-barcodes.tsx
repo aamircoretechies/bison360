@@ -578,10 +578,10 @@ const StoreProductsBarcodes = () => {
         cellBorder: true,
       }}
     >
-      <Card>
+      <Card className="w-full max-w-full overflow-hidden">
         <CardHeader>
           <CardHeading>
-            <div className="flex items-center gap-2.5 py-2">
+            <div className="flex   flex-wrap items-center gap-2.5 py-2">
               <div className="relative">
                 <Search className="size-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2" />
                 <Input
@@ -691,9 +691,12 @@ const StoreProductsBarcodes = () => {
         </CardHeader>
         <CardTable>
           <ScrollArea>
+             <div className="w-full overflow-x-auto">
             <DataGridTable />
             <ScrollBar orientation="horizontal" />
+            </div>
           </ScrollArea>
+          
         </CardTable>
         <CardFooter>
           <DataGridPagination />
