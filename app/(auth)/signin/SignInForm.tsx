@@ -1,16 +1,17 @@
-/* 'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { RiErrorWarningFill } from '@remixicon/react';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { signIn } from 'next-auth/react';
-import { useForm } from 'react-hook-form';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { RiErrorWarningFill } from "@remixicon/react";
+import { AlertCircle, Eye, EyeOff, LoaderCircleIcon } from "lucide-react";
+import { signIn, getCsrfToken } from "next-auth/react";
+import { useForm } from "react-hook-form";
+
+import { Alert, AlertIcon, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -18,23 +19,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { LoaderCircleIcon } from 'lucide-react';
-import { Icons } from '@/components/common/icons';
-import { getSigninSchema, SigninSchemaType } from '../forms/signin-schema';
-import { getCsrfToken } from "next-auth/react";
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { getSigninSchema, SigninSchemaType } from "../forms/signin-schema";
 
-export default async function Page() {
-  console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
- const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-
-  const res = await fetch(`${baseUrl}/api/auth/csrf`, {
-    cache: "no-store",
-  });
-  const data = await res.json();
-  const csrfToken = data?.csrfToken;
+export default function SignInPage() {
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,8 +32,8 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
   const form = useForm<SigninSchemaType>({
     resolver: zodResolver(getSigninSchema()),
     defaultValues: {
-      email: 'demo@kt.com',
-      password: 'demo123',
+      email: "demo@kt.com",
+      password: "demo123",
       rememberMe: false,
     },
   });
@@ -54,24 +43,31 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
     setError(null);
 
     try {
-      const response = await signIn('credentials', {
+      const csrfToken = await getCsrfToken();
+
+      const response = await signIn("credentials", {
         redirect: false,
         email: values.email,
         password: values.password,
         rememberMe: values.rememberMe,
+        csrfToken,
       });
 
       if (response?.error) {
-        const errorData = JSON.parse(response.error);
-        setError(errorData.message);
+        try {
+          const errorData = JSON.parse(response.error);
+          setError(errorData.message);
+        } catch {
+          setError(response.error);
+        }
       } else {
-        router.push('/');
+        router.push("/");
       }
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : 'An unexpected error occurred. Please try again.',
+          : "An unexpected error occurred. Please try again."
       );
     } finally {
       setIsProcessing(false);
@@ -84,10 +80,9 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
         onSubmit={form.handleSubmit(onSubmit)}
         className="block w-full space-y-5"
       >
-        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
         <div className="space-y-1.5 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
-            Sign in to <span className='text-primary'>Bison360</span>
+            Sign in to <span className="text-primary">Bison360</span>
           </h1>
         </div>
 
@@ -96,14 +91,12 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
             <RiErrorWarningFill className="text-primary" />
           </AlertIcon>
           <AlertTitle className="text-accent-foreground">
-            Use <span className="text-mono font-semibold">demo@kt.com</span>{' '}
-            username and{' '}
+            Use <span className="text-mono font-semibold">demo@kt.com</span>{" "}
+            username and{" "}
             <span className="text-mono font-semibold">demo123</span> for demo
             access.
           </AlertTitle>
         </Alert>
-
-       
 
         {error && (
           <Alert variant="destructive">
@@ -145,7 +138,7 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
               <div className="relative">
                 <Input
                   placeholder="Your password"
-                  type={passwordVisible ? 'text' : 'password'} // Toggle input type
+                  type={passwordVisible ? "text" : "password"}
                   {...field}
                 />
                 <Button
@@ -153,10 +146,10 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
                   variant="ghost"
                   mode="icon"
                   size="sm"
-                  onClick={() => setPasswordVisible(!passwordVisible)} // Toggle visibility
-                  className="absolute end-0 top-1/2 -translate-y-1/2 h-7 w-7 me-1.5 bg-transparent!"
+                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  className="absolute end-0 top-1/2 -translate-y-1/2 h-7 w-7 me-1.5"
                   aria-label={
-                    passwordVisible ? 'Hide password' : 'Show password'
+                    passwordVisible ? "Hide password" : "Show password"
                   }
                 >
                   {passwordVisible ? (
@@ -195,13 +188,15 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
 
         <div className="flex flex-col gap-2.5">
           <Button type="submit" disabled={isProcessing}>
-            {isProcessing ? <LoaderCircleIcon className="size-4 animate-spin" /> : null}
+            {isProcessing ? (
+              <LoaderCircleIcon className="size-4 animate-spin" />
+            ) : null}
             Continue
           </Button>
         </div>
 
         <p className="text-sm text-muted-foreground text-center">
-          Don&apos;t have an account?{' '}
+          Don&apos;t have an account?{" "}
           <Link
             href="/signup"
             className="text-sm font-semibold text-foreground hover:text-primary"
@@ -212,12 +207,4 @@ console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
       </form>
     </Form>
   );
-}
- */
-
-// app/(auth)/signin/page.tsx
-import SignInForm from "./SignInForm";
-
-export default function SignInPage() {
-  return <SignInForm />;
 }
