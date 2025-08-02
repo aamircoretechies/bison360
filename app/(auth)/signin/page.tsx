@@ -25,8 +25,9 @@ import { Icons } from '@/components/common/icons';
 import { getSigninSchema, SigninSchemaType } from '../forms/signin-schema';
 import { getCsrfToken } from "next-auth/react";
 
-export default function Page({ csrfToken }: { csrfToken: string }) {
+export default async function Page() {
   const router = useRouter();
+  const csrfToken = await getCsrfToken();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
