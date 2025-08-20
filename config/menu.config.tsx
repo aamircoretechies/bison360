@@ -70,12 +70,13 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Livestock (EID Tracking)',
     icon: Beef,
-    children: [
-      { title: 'Register / Assign Tag', path: '#' },
-      { title: 'Bison Profiles', path: '#' },
-      { title: 'Lifecycle Events', path: '#' },
-      { title: 'Livestock Reports', path: '#' },
-    ],
+   children: [
+    { title: 'Dashboard', path: '/livestock/dashboard' },
+    { title: 'Register / Assign Tag', path: '/livestock/register' },
+    { title: 'Bison Profiles', path: '/livestock/profiles' },
+    { title: 'Lifecycle Events', path: '/livestock/events' },
+    { title: 'Livestock Reports', path: '/livestock/reports' },
+  ],
   },
   {
     title: 'Orders & Shipping',
