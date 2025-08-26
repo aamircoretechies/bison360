@@ -380,11 +380,11 @@ export function OrdersDashboardContent() {
         header: ({ column }) => (
           <DataGridColumnHeader title="Payment" column={column} />
         ),
-        cell: ({ row }) => (
-          <Badge variant="outline" size="sm">
-            {getPaymentMethodLabel(row.original.paymentMethod)}
-          </Badge>
-        ),
+                 cell: ({ row }) => (
+           <Badge variant="secondary" size="sm">
+             {getPaymentMethodLabel(row.original.paymentMethod)}
+           </Badge>
+         ),
         enableSorting: true,
         size: 120,
         meta: {
@@ -589,7 +589,7 @@ export function OrdersDashboardContent() {
           </TabsTrigger>
           <TabsTrigger value="Delivered" className="flex items-center gap-2">
             Delivered
-            <Badge variant="default" size="sm">
+            <Badge variant="success" size="sm">
               {statusCounts.Delivered || 0}
             </Badge>
           </TabsTrigger>
