@@ -36,10 +36,10 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<StockFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<StockFormData> = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';

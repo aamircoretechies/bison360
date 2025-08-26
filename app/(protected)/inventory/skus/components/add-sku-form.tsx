@@ -36,10 +36,10 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<SkuFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<SkuFormData> = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';

@@ -38,10 +38,10 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<Partial<BarcodeFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<BarcodeFormData> = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';
