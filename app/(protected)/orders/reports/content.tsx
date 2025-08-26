@@ -123,7 +123,7 @@ export function OrderReportsContent() {
       case 'Shipped':
         return 'success';
       case 'Delivered':
-        return 'default';
+        return 'success';
       default:
         return 'secondary';
     }
