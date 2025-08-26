@@ -284,7 +284,7 @@ export function OrdersDashboardContent() {
   }, []);
 
   const handlePaymentMethodChange = (checked: boolean, value: string) => {
-    setSelectedPaymentMethods((prev = []) =>
+    setSelectedPaymentMethods((prev) =>
       checked ? [...prev, value] : prev.filter((v) => v !== value),
     );
   };

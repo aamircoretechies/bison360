@@ -528,7 +528,7 @@ export function NewSaleContent() {
                 {paymentMethods.map((method) => (
                   <Button
                     key={method.id}
-                    variant={selectedPaymentMethod === method.id ? "default" : "outline"}
+                    variant={selectedPaymentMethod === method.id ? "primary" : "outline"}
                     className="justify-start"
                     onClick={() => setSelectedPaymentMethod(method.id)}
                   >
