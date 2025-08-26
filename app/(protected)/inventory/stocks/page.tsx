@@ -42,7 +42,9 @@ export default function NetworkStoreClientsPage() {
             </ToolbarHeading>
             <ToolbarActions>
               <Button variant="outline">Import CSV</Button>
-              <Button variant="primary">Add New</Button>
+              <Button variant="primary" asChild>
+                <a href="/inventory/stocks/add">Add New</a>
+              </Button>
             </ToolbarActions>
           </Toolbar>
         </Container>

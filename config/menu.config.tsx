@@ -82,11 +82,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Orders & Shipping',
     icon: Truck,
     children: [
-      { title: 'Online Orders', path: '#' },
-      { title: 'POS Orders', path: '#' },
-      { title: 'Order Lifecycle', path: '#' },
-      { title: 'Shipping Labels', path: '#' },
-      { title: 'Tracking & Dispatch', path: '#' },
+      { title: 'Orders Dashboard', path: '/orders/dashboard' },
+      { title: 'Order Detail', path: '/orders/ORD-2024-001' },
+      { title: 'POS Orders', path: '/orders/pos' },
+      { title: 'Shipping Labels', path: '/orders/shipping-label' },
+      { title: 'Order Reports', path: '/orders/reports' },
     ],
   },
   {
