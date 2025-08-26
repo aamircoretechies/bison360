@@ -144,7 +144,7 @@ export default function POSOrdersPage() {
                     <div className="text-right">
                       <p className="font-medium">${transaction.amount.toFixed(2)}</p>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" size="sm">{transaction.method}</Badge>
+                        <Badge variant="secondary" size="sm">{transaction.method}</Badge>
                         <span className="text-sm text-muted-foreground">{transaction.time}</span>
                       </div>
                     </div>

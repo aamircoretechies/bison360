@@ -270,7 +270,7 @@ export function ShippingLabelContent() {
                       <span className="text-2xl">{carriers[labelData.carrier].icon}</span>
                       <span className="font-bold text-lg">{carriers[labelData.carrier].name}</span>
                     </div>
-                    <Badge variant="outline">{labelData.service}</Badge>
+                    <Badge variant="secondary">{labelData.service}</Badge>
                   </div>
 
                   <Separator />

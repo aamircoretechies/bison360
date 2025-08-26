@@ -338,9 +338,9 @@ export function NewSaleContent() {
                         <h3 className="font-medium text-sm">{product.name}</h3>
                         <p className="text-xs text-gray-500">{product.sku}</p>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {product.category}
-                      </Badge>
+                                             <Badge variant="secondary" className="text-xs">
+                         {product.category}
+                       </Badge>
                     </div>
                     
                     <div className="flex justify-between items-center">
