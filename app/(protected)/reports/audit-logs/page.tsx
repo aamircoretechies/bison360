@@ -418,10 +418,10 @@ export default function AuditLogsPage() {
                           </TableCell>
                           <TableCell>
                             <Badge variant={
-                              log.level === 'Info' ? 'default' :
-                              log.level === 'Warning' ? 'secondary' :
+                              log.level === 'Info' ? 'info' :
+                              log.level === 'Warning' ? 'warning' :
                               log.level === 'Error' ? 'destructive' :
-                              'outline'
+                              'secondary'
                             }>
                               {log.level}
                             </Badge>

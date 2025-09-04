@@ -164,7 +164,7 @@ export default function USDAReportsPage() {
                       <TableCell>{report.period}</TableCell>
                       <TableCell>
                         <Badge variant={
-                          report.status === 'Submitted' ? 'default' :
+                          report.status === 'Submitted' ? 'primary' :
                           report.status === 'Pending Review' ? 'secondary' :
                           'success'
                         }>

@@ -353,8 +353,8 @@ export default function GrownByOrdersPage() {
                           <TableCell>
                             <Badge variant={
                               order.status === 'Pending' ? 'secondary' :
-                              order.status === 'Processing' ? 'default' :
-                              order.status === 'Shipped' ? 'outline' :
+                              order.status === 'Processing' ? 'warning' :
+                              order.status === 'Shipped' ? 'info' :
                               'success'
                             }>
                               {order.status}
@@ -372,8 +372,8 @@ export default function GrownByOrdersPage() {
                           </TableCell>
                           <TableCell>
                             <Badge variant={
-                              order.inventoryStatus === 'Reserved' ? 'default' :
-                              order.inventoryStatus === 'Shipped' ? 'outline' :
+                              order.inventoryStatus === 'Reserved' ? 'warning' :
+                              order.inventoryStatus === 'Shipped' ? 'info' :
                               order.inventoryStatus === 'Delivered' ? 'success' :
                               'destructive'
                             }>

@@ -439,7 +439,7 @@ export default function IntegrationDashboardPage() {
                           <TableCell>
                             <Badge variant={
                               activity.status === 'Success' ? 'success' :
-                              activity.status === 'Warning' ? 'default' :
+                              activity.status === 'Warning' ? 'warning' :
                               'destructive'
                             }>
                               {activity.status}

@@ -398,7 +398,7 @@ export default function ShippingServicesPage() {
                           <TableCell>
                             <Badge variant={
                               shipment.status === 'Delivered' ? 'success' :
-                              shipment.status === 'In Transit' ? 'default' :
+                              shipment.status === 'In Transit' ? 'info' :
                               shipment.status === 'Delayed' ? 'destructive' :
                               'secondary'
                             }>

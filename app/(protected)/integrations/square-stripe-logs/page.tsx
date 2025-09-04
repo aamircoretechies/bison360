@@ -439,7 +439,7 @@ export default function SquareStripeLogsPage() {
                           <TableCell>
                             <Badge variant={
                               error.severity === 'High' ? 'destructive' :
-                              error.severity === 'Medium' ? 'default' :
+                              error.severity === 'Medium' ? 'warning' :
                               'secondary'
                             }>
                               {error.severity}
