@@ -85,7 +85,7 @@ export default function SalesReportsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Sales Reports</ToolbarPageTitle>
+              <ToolbarPageTitle text="Sales Reports" />
               <ToolbarDescription>
                 Comprehensive sales analytics and performance insights across all channels
               </ToolbarDescription>

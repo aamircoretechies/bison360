@@ -288,7 +288,7 @@ export default function RefundsCancellationsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Refunds & Cancellations</ToolbarPageTitle>
+              <ToolbarPageTitle text="Refunds & Cancellations" />
               <ToolbarDescription>
                 Process refunds and handle order cancellations
               </ToolbarDescription>

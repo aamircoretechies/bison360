@@ -141,7 +141,7 @@ export default function SquareStripeLogsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Square & Stripe Logs</ToolbarPageTitle>
+              <ToolbarPageTitle text="Square & Stripe Logs" />
               <ToolbarDescription>
                 Monitor payment processing integrations and transaction logs
               </ToolbarDescription>

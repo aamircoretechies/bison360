@@ -172,7 +172,7 @@ export default function ShippingServicesPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Shipping Services</ToolbarPageTitle>
+              <ToolbarPageTitle text="Shipping Services" />
               <ToolbarDescription>
                 Manage shipping integrations and track shipments across carriers
               </ToolbarDescription>

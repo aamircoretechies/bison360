@@ -81,7 +81,7 @@ export default function MeatMovementShrinkagePage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Meat Movement & Shrinkage</ToolbarPageTitle>
+              <ToolbarPageTitle text="Meat Movement & Shrinkage" />
               <ToolbarDescription>
                 Track meat inventory movement and monitor shrinkage rates across facilities
               </ToolbarDescription>

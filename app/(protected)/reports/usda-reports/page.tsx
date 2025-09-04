@@ -67,7 +67,7 @@ export default function USDAReportsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>USDA Reports</ToolbarPageTitle>
+              <ToolbarPageTitle text="USDA Reports" />
               <ToolbarDescription>
                 Manage and submit USDA compliance reports and documentation
               </ToolbarDescription>

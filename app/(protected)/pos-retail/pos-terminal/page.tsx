@@ -271,7 +271,7 @@ export default function POSTerminalPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>POS Terminal</ToolbarPageTitle>
+              <ToolbarPageTitle text="POS Terminal" />
               <ToolbarDescription>
                 Point of Sale system for in-store transactions
               </ToolbarDescription>

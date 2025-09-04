@@ -119,7 +119,7 @@ export default function NotificationsSetupPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Notification Setup (Admin)</ToolbarPageTitle>
+              <ToolbarPageTitle text="Notification Setup (Admin)" />
               <ToolbarDescription>
                 Configure inventory alerts, end-of-day POS reports, and offline sync notifications
               </ToolbarDescription>

@@ -287,7 +287,7 @@ export default function AuditLogsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Audit Logs</ToolbarPageTitle>
+              <ToolbarPageTitle text="Audit Logs" />
               <ToolbarDescription>
                 Track all POS system activities and user actions
               </ToolbarDescription>

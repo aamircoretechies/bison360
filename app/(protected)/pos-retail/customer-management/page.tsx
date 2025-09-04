@@ -314,7 +314,7 @@ export default function CustomerManagementPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Customer Management</ToolbarPageTitle>
+              <ToolbarPageTitle text="Customer Management" />
               <ToolbarDescription>
                 Manage customer profiles, orders, and loyalty programs
               </ToolbarDescription>

@@ -204,7 +204,7 @@ export default function IntegrationDashboardPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Integration Dashboard</ToolbarPageTitle>
+              <ToolbarPageTitle text="Integration Dashboard" />
               <ToolbarDescription>
                 Monitor all integrations, sync status, and system health
               </ToolbarDescription>

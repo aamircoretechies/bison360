@@ -244,7 +244,7 @@ export default function RetailProductsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Retail Products</ToolbarPageTitle>
+              <ToolbarPageTitle text="Retail Products" />
               <ToolbarDescription>
                 Manage product catalog, inventory, and pricing
               </ToolbarDescription>

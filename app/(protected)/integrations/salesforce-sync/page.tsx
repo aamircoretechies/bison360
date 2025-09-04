@@ -109,7 +109,7 @@ export default function SalesforceSyncPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Salesforce Sync</ToolbarPageTitle>
+              <ToolbarPageTitle text="Salesforce Sync" />
               <ToolbarDescription>
                 Manage Salesforce integration, monitor sync status, and configure data mapping
               </ToolbarDescription>

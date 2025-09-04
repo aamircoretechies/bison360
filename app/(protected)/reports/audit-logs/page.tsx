@@ -97,7 +97,7 @@ export default function AuditLogsPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Audit Logs</ToolbarPageTitle>
+              <ToolbarPageTitle text="Audit Logs" />
               <ToolbarDescription>
                 Monitor system activity, user actions, and security events across all platforms
               </ToolbarDescription>

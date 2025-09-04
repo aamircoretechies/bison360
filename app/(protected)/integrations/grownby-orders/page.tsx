@@ -140,7 +140,7 @@ export default function GrownByOrdersPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>GrownBy Orders</ToolbarPageTitle>
+              <ToolbarPageTitle text="GrownBy Orders" />
               <ToolbarDescription>
                 Manage and monitor orders from GrownBy platform integration
               </ToolbarDescription>

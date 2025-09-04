@@ -222,7 +222,7 @@ export default function ZReportPage() {
         <Container>
           <Toolbar>
             <ToolbarHeading>
-              <ToolbarPageTitle>Z-Report</ToolbarPageTitle>
+              <ToolbarPageTitle text="Z-Report" />
               <ToolbarDescription>
                 End-of-shift sales reports and cash drawer reconciliation
               </ToolbarDescription>
