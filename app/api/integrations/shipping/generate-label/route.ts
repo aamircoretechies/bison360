@@ -131,7 +131,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      labelId: labelRecord.id,
       trackingNumber: labelResult.trackingNumber,
       labelUrl: labelResult.labelUrl,
       cost: labelResult.cost
