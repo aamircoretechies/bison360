@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (!labelResult.success) {
       return NextResponse.json(
-        { message: labelResult.error || 'Label generation failed' },
+        { message: 'Label generation failed' },
         { status: 500 }
       );
     }
