@@ -129,7 +129,7 @@ export function OfflinePOSBanner({ onSync, onViewQueue }: OfflinePOSBannerProps)
       case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
       case 'syncing':
-        return <Badge variant="default">Syncing</Badge>;
+        return <Badge variant="primary">Syncing</Badge>;
       case 'synced':
         return <Badge variant="success">Synced</Badge>;
       case 'failed':
@@ -190,7 +190,7 @@ export function OfflinePOSBanner({ onSync, onViewQueue }: OfflinePOSBannerProps)
             <h4 className="font-medium">Sync Queue</h4>
             <div className="flex items-center space-x-2">
               <Badge variant="secondary">{pendingCount} Pending</Badge>
-              {syncingCount > 0 && <Badge variant="default">{syncingCount} Syncing</Badge>}
+              {syncingCount > 0 && <Badge variant="primary">{syncingCount} Syncing</Badge>}
               {failedCount > 0 && <Badge variant="destructive">{failedCount} Failed</Badge>}
             </div>
           </div>

@@ -139,7 +139,7 @@ function getPaymentMethodLabel(method: string) {
 function getPaymentMethodBadgeVariant(method: string) {
   switch (method) {
     case 'POS':
-      return 'default';
+      return 'primary';
     case 'Online':
       return 'secondary';
     case 'Cash':
@@ -405,10 +405,10 @@ export function TransactionsLogContent() {
                       {new Date(transaction.date).toLocaleString()}
                     </div>
                   </div>
-                  <Badge variant={getPaymentMethodBadgeVariant(transaction.paymentMethod) as any}>
+                  <Badge variant={getPaymentMethodBadgeVariant(transaction.paymentMethod)}>
                     {getPaymentMethodLabel(transaction.paymentMethod)}
                   </Badge>
-                  <Badge variant={getStatusBadgeVariant(transaction.status) as any}>
+                  <Badge variant={getStatusBadgeVariant(transaction.status)}>
                     {transaction.status}
                   </Badge>
                 </div>

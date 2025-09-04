@@ -53,7 +53,7 @@ export function DataMismatchResolver({ mismatches, onResolve, onIgnore }: DataMi
     switch (severity) {
       case 'critical': return 'destructive';
       case 'high': return 'destructive';
-      case 'medium': return 'default';
+      case 'medium': return 'warning';
       case 'low': return 'secondary';
       default: return 'secondary';
     }

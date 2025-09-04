@@ -129,7 +129,7 @@ function getPaymentMethodLabel(method: string) {
 function getPaymentMethodBadgeVariant(method: string) {
   switch (method) {
     case 'POS':
-      return 'default';
+      return 'primary';
     case 'Online':
       return 'secondary';
     case 'Cash':
@@ -310,7 +310,7 @@ export function SalesDashboardContent() {
                 {paymentMethodStats.map((stat) => (
                   <div key={stat.method} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Badge variant={getPaymentMethodBadgeVariant(stat.method) as any}>
+                      <Badge variant={getPaymentMethodBadgeVariant(stat.method)}>
                         {getPaymentMethodLabel(stat.method)}
                       </Badge>
                       <span className="text-sm text-muted-foreground">
@@ -362,7 +362,7 @@ export function SalesDashboardContent() {
                           {new Date(transaction.date).toLocaleString()}
                         </div>
                       </div>
-                      <Badge variant={getPaymentMethodBadgeVariant(transaction.paymentMethod) as any}>
+                      <Badge variant={getPaymentMethodBadgeVariant(transaction.paymentMethod)}>
                         {getPaymentMethodLabel(transaction.paymentMethod)}
                       </Badge>
                     </div>

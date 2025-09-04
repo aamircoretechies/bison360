@@ -209,7 +209,7 @@ export default function RefundsCancellationsPage() {
       case 'pending':
         return <Badge variant="secondary">Pending</Badge>;
       case 'approved':
-        return <Badge variant="default">Approved</Badge>;
+        return <Badge variant="success">Approved</Badge>;
       case 'rejected':
         return <Badge variant="destructive">Rejected</Badge>;
       case 'completed':

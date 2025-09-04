@@ -249,7 +249,7 @@ export default function CustomerManagementPage() {
       case 'inactive':
         return <Badge variant="secondary">Inactive</Badge>;
       case 'vip':
-        return <Badge variant="default">VIP</Badge>;
+        return <Badge variant="primary">VIP</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
