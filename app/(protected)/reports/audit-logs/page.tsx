@@ -316,7 +316,7 @@ export default function AuditLogsPage() {
                             <Badge variant={
                               event.severity === 'High' ? 'destructive' :
                               event.severity === 'Medium' ? 'secondary' :
-                              'outline'
+                              'warning'
                             }>
                               {event.severity}
                             </Badge>
