@@ -314,14 +314,14 @@ export default function RetailProductsPage() {
                   </Select>
                   <div className="flex border rounded-md">
                     <Button
-                      variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                       size="sm"
                       onClick={() => setViewMode('grid')}
                     >
                       <Grid3X3 className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                       size="sm"
                       onClick={() => setViewMode('list')}
                     >

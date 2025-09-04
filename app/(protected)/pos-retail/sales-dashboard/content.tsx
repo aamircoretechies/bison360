@@ -209,21 +209,21 @@ export function SalesDashboardContent() {
       {/* Period Selector */}
       <div className="flex items-center gap-2">
         <Button
-          variant={selectedPeriod === 'today' ? 'default' : 'outline'}
+          variant={selectedPeriod === 'today' ? 'secondary' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('today')}
         >
           Today
         </Button>
         <Button
-          variant={selectedPeriod === 'week' ? 'default' : 'outline'}
+          variant={selectedPeriod === 'week' ? 'secondary' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('week')}
         >
           This Week
         </Button>
         <Button
-          variant={selectedPeriod === 'month' ? 'default' : 'outline'}
+          variant={selectedPeriod === 'month' ? 'secondary' : 'outline'}
           size="sm"
           onClick={() => setSelectedPeriod('month')}
         >

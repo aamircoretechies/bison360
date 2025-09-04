@@ -364,28 +364,28 @@ export default function AuditLogsPage() {
               </div>
               <div className="flex gap-2 mt-4">
                 <Button
-                  variant={dateRange === 'today' ? 'default' : 'outline'}
+                  variant={dateRange === 'today' ? 'secondary' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('today')}
                 >
                   Today
                 </Button>
                 <Button
-                  variant={dateRange === 'week' ? 'default' : 'outline'}
+                  variant={dateRange === 'week' ? 'secondary' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('week')}
                 >
                   This Week
                 </Button>
                 <Button
-                  variant={dateRange === 'month' ? 'default' : 'outline'}
+                  variant={dateRange === 'month' ? 'secondary' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('month')}
                 >
                   This Month
                 </Button>
                 <Button
-                  variant={dateRange === 'all' ? 'default' : 'outline'}
+                  variant={dateRange === 'all' ? 'secondary' : 'outline'}
                   size="sm"
                   onClick={() => setDateRange('all')}
                 >

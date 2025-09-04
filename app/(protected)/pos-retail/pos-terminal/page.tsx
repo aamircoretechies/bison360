@@ -516,7 +516,7 @@ export default function POSTerminalPage() {
                   {paymentMethods.map((method) => (
                     <Button
                       key={method.type}
-                      variant={selectedPaymentMethod === method.type ? 'default' : 'outline'}
+                      variant={selectedPaymentMethod === method.type ? 'secondary' : 'outline'}
                       onClick={() => setSelectedPaymentMethod(method.type)}
                       className="flex items-center space-x-2"
                     >
