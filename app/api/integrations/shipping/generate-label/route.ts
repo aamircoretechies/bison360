@@ -199,7 +199,7 @@ function calculateShippingCost(carrier: string, service: string, weight: number)
     fedex: { ground: 9.25, express: 16.99, overnight: 27.99 }
   };
 
-  const baseRate = baseRates[carrier]?.[service] || 10.00;
+  const baseRate = baseRates[carrier as keyof typeof baseRates]?.[service as keyof typeof baseRates[keyof typeof baseRates]] || 10.00;
   const weightMultiplier = Math.ceil(weight / 1); // $1 per pound
   return baseRate + (weightMultiplier * 1.00);
 }
