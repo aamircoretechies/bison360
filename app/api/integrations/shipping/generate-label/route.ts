@@ -84,34 +84,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // TODO: Create ShippingLabel and Order models in Prisma schema
     // Save label information to database
-    const labelRecord = await prisma.shippingLabel.create({
-      data: {
-        orderId,
-        carrier,
-        service,
-        trackingNumber: labelResult.trackingNumber,
-        labelUrl: labelResult.labelUrl,
-        cost: labelResult.cost,
-        weight,
-        dimensions: JSON.stringify(dimensions),
-        fromAddress: JSON.stringify(from),
-        toAddress: JSON.stringify(to),
-        status: 'generated',
-        generatedAt: new Date(),
-        generatedBy: session.user.id
-      }
-    });
+    // const labelRecord = await prisma.shippingLabel.create({
+    //   data: {
+    //     orderId,
+    //     carrier,
+    //     service,
+    //     trackingNumber: labelResult.trackingNumber,
+    //     labelUrl: labelResult.labelUrl,
+    //     cost: labelResult.cost,
+    //     weight,
+    //     dimensions: JSON.stringify(dimensions),
+    //     fromAddress: JSON.stringify(from),
+    //     toAddress: JSON.stringify(to),
+    //     status: 'generated',
+    //     generatedAt: new Date(),
+    //     generatedBy: session.user.id
+    //   }
+    // });
 
     // Update order with tracking information
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        trackingNumber: labelResult.trackingNumber,
-        shippingLabelId: labelRecord.id,
-        status: 'shipped'
-      }
-    });
+    // await prisma.order.update({
+    //   where: { id: orderId },
+    //   data: {
+    //     trackingNumber: labelResult.trackingNumber,
+    //     shippingLabelId: labelRecord.id,
+    //     status: 'shipped'
+    //   }
+    // });
 
     // Log the event
     await systemLog({
@@ -229,41 +230,48 @@ export async function GET(request: NextRequest) {
 
     const whereClause = orderId ? { orderId } : { id: labelId };
     
-    const label = await prisma.shippingLabel.findFirst({
-      where: whereClause,
-      include: {
-        order: {
-          select: {
-            id: true,
-            orderNumber: true,
-            status: true
-          }
-        }
-      }
-    });
+    // TODO: Create ShippingLabel and Order models in Prisma schema
+    // const label = await prisma.shippingLabel.findFirst({
+    //   where: whereClause,
+    //   include: {
+    //     order: {
+    //       select: {
+    //         id: true,
+    //         orderNumber: true,
+    //         status: true
+    //       }
+    //     }
+    //   }
+    // });
 
-    if (!label) {
-      return NextResponse.json(
-        { message: 'Label not found' },
-        { status: 404 }
-      );
-    }
+    // TODO: Uncomment when ShippingLabel model is created
+    // if (!label) {
+    //   return NextResponse.json(
+    //     { message: 'Label not found' },
+    //     { status: 404 }
+    //   );
+    // }
 
+    // return NextResponse.json({
+    //   id: label.id,
+    //   orderId: label.orderId,
+    //   carrier: label.carrier,
+    //   service: label.service,
+    //   trackingNumber: label.trackingNumber,
+    //   labelUrl: label.labelUrl,
+    //   cost: label.cost,
+    //   weight: label.weight,
+    //   dimensions: JSON.parse(label.dimensions),
+    //   fromAddress: JSON.parse(label.fromAddress),
+    //   toAddress: JSON.parse(label.toAddress),
+    //   status: label.status,
+    //   generatedAt: label.generatedAt,
+    //   order: label.order
+    // });
+
+    // Temporary response until models are created
     return NextResponse.json({
-      id: label.id,
-      orderId: label.orderId,
-      carrier: label.carrier,
-      service: label.service,
-      trackingNumber: label.trackingNumber,
-      labelUrl: label.labelUrl,
-      cost: label.cost,
-      weight: label.weight,
-      dimensions: JSON.parse(label.dimensions),
-      fromAddress: JSON.parse(label.fromAddress),
-      toAddress: JSON.parse(label.toAddress),
-      status: label.status,
-      generatedAt: label.generatedAt,
-      order: label.order
+      message: 'ShippingLabel and Order models need to be created in Prisma schema'
     });
 
   } catch (error) {

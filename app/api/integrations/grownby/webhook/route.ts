@@ -94,119 +94,126 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleOrderCreated(orderData: any) {
+  // TODO: Create GrownByOrder model in Prisma schema
   // Create new order in database
-  await prisma.grownByOrder.create({
-    data: {
-      externalId: orderData.id,
-      orderNumber: orderData.order_number,
-      customerName: orderData.customer.name,
-      customerEmail: orderData.customer.email,
-      status: 'pending',
-      total: orderData.total_amount,
-      items: orderData.items,
-      platform: 'GrownBy',
-      rawData: orderData,
-      syncedAt: new Date()
-    }
-  });
+  // await prisma.grownByOrder.create({
+  //   data: {
+  //     externalId: orderData.id,
+  //     orderNumber: orderData.order_number,
+  //     customerName: orderData.customer.name,
+  //     customerEmail: orderData.customer.email,
+  //     status: 'pending',
+  //     total: orderData.total_amount,
+  //     items: orderData.items,
+  //     platform: 'GrownBy',
+  //     rawData: orderData,
+  //     syncedAt: new Date()
+  //   }
+  // });
 
   // Check inventory availability
   await checkInventoryAvailability(orderData.items);
 }
 
 async function handleOrderUpdated(orderData: any) {
+  // TODO: Create GrownByOrder model in Prisma schema
   // Update existing order
-  await prisma.grownByOrder.updateMany({
-    where: { externalId: orderData.id },
-    data: {
-      status: orderData.status,
-      total: orderData.total_amount,
-      items: orderData.items,
-      rawData: orderData,
-      syncedAt: new Date()
-    }
-  });
+  // await prisma.grownByOrder.updateMany({
+  //   where: { externalId: orderData.id },
+  //   data: {
+  //     status: orderData.status,
+  //     total: orderData.total_amount,
+  //     items: orderData.items,
+  //     rawData: orderData,
+  //     syncedAt: new Date()
+  //   }
+  // });
 }
 
 async function handleOrderCancelled(orderData: any) {
+  // TODO: Create GrownByOrder model in Prisma schema
   // Update order status to cancelled
-  await prisma.grownByOrder.updateMany({
-    where: { externalId: orderData.id },
-    data: {
-      status: 'cancelled',
-      syncedAt: new Date()
-    }
-  });
+  // await prisma.grownByOrder.updateMany({
+  //   where: { externalId: orderData.id },
+  //   data: {
+  //     status: 'cancelled',
+  //     syncedAt: new Date()
+  //   }
+  // });
 
   // Release inventory
   await releaseInventory(orderData.items);
 }
 
 async function handlePaymentCompleted(paymentData: any) {
+  // TODO: Create GrownByOrder model in Prisma schema
   // Update order payment status
-  await prisma.grownByOrder.updateMany({
-    where: { externalId: paymentData.order_id },
-    data: {
-      paymentStatus: 'completed',
-      paymentMethod: paymentData.payment_method,
-      paymentId: paymentData.payment_id,
-      syncedAt: new Date()
-    }
-  });
+  // await prisma.grownByOrder.updateMany({
+  //   where: { externalId: paymentData.order_id },
+  //   data: {
+  //     paymentStatus: 'completed',
+  //     paymentMethod: paymentData.payment_method,
+  //     paymentId: paymentData.payment_id,
+  //     syncedAt: new Date()
+  //   }
+  // });
 }
 
 async function handleInventoryUpdated(inventoryData: any) {
+  // TODO: Create Inventory model in Prisma schema
   // Update inventory levels
-  for (const item of inventoryData.items) {
-    await prisma.inventory.updateMany({
-      where: { sku: item.sku },
-      data: {
-        quantity: item.quantity,
-        lastUpdated: new Date()
-      }
-    });
-  }
+  // for (const item of inventoryData.items) {
+  //   await prisma.inventory.updateMany({
+  //     where: { sku: item.sku },
+  //     data: {
+  //       quantity: item.quantity,
+  //       lastUpdated: new Date()
+  //     }
+  //   });
+  // }
 }
 
 async function checkInventoryAvailability(items: any[]) {
+  // TODO: Create Inventory and InventoryAlert models in Prisma schema
   const unavailableItems = [];
   
-  for (const item of items) {
-    const inventory = await prisma.inventory.findFirst({
-      where: { sku: item.sku }
-    });
+  // for (const item of items) {
+  //   const inventory = await prisma.inventory.findFirst({
+  //     where: { sku: item.sku }
+  //   });
     
-    if (!inventory || inventory.quantity < item.quantity) {
-      unavailableItems.push({
-        sku: item.sku,
-        requested: item.quantity,
-        available: inventory?.quantity || 0
-      });
-    }
-  }
+  //   if (!inventory || inventory.quantity < item.quantity) {
+  //     unavailableItems.push({
+  //       sku: item.sku,
+  //       requested: item.quantity,
+  //       available: inventory?.quantity || 0
+  //     });
+  //   }
+  // }
 
-  if (unavailableItems.length > 0) {
-    // Create inventory alert
-    await prisma.inventoryAlert.create({
-      data: {
-        type: 'insufficient_stock',
-        items: unavailableItems,
-        status: 'active',
-        source: 'grownby_webhook'
-      }
-    });
-  }
+  // if (unavailableItems.length > 0) {
+  //   // Create inventory alert
+  //   await prisma.inventoryAlert.create({
+  //     data: {
+  //       type: 'insufficient_stock',
+  //       items: unavailableItems,
+  //       status: 'active',
+  //       source: 'grownby_webhook'
+  //     }
+  //   });
+  // }
 }
 
 async function releaseInventory(items: any[]) {
-  for (const item of items) {
-    await prisma.inventory.updateMany({
-      where: { sku: item.sku },
-      data: {
-        quantity: {
-          increment: item.quantity
-        }
-      }
-    });
-  }
+  // TODO: Create Inventory model in Prisma schema
+  // for (const item of items) {
+  //   await prisma.inventory.updateMany({
+  //     where: { sku: item.sku },
+  //     data: {
+  //       quantity: {
+  //         increment: item.quantity
+  //       }
+  //     }
+  //   });
+  // }
 }
