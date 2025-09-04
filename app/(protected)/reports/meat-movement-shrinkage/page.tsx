@@ -287,7 +287,7 @@ export default function MeatMovementShrinkagePage() {
                         <Badge variant={
                           item.status === 'Completed' ? 'success' :
                           item.status === 'In Progress' ? 'secondary' :
-                          'default'
+                          'warning'
                         }>
                           {item.status}
                         </Badge>

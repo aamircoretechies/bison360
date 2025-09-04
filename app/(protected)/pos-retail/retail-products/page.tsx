@@ -566,7 +566,7 @@ export default function RetailProductsPage() {
                     <Label>Tags</Label>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {selectedProduct.tags.map((tag) => (
-                        <Badge key={tag} variant="outline">{tag}</Badge>
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
                       ))}
                     </div>
                   </div>

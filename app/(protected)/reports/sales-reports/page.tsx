@@ -394,7 +394,7 @@ export default function SalesReportsPage() {
                             <Badge variant={
                               sale.status === 'Completed' ? 'success' :
                               sale.status === 'Pending' ? 'secondary' :
-                              'default'
+                              'warning'
                             }>
                               {sale.status}
                             </Badge>

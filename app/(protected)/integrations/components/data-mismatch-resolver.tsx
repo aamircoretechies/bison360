@@ -128,7 +128,7 @@ export function DataMismatchResolver({ mismatches, onResolve, onIgnore }: DataMi
                   <Badge variant={
                     mismatch.status === 'resolved' ? 'success' :
                     mismatch.status === 'ignored' ? 'secondary' :
-                    'default'
+                    'warning'
                   }>
                     {mismatch.status}
                   </Badge>

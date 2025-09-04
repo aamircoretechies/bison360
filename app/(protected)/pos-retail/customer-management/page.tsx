@@ -454,7 +454,7 @@ export default function CustomerManagementPage() {
                           <div className="text-sm text-muted-foreground">{customer.id}</div>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {customer.tags.slice(0, 2).map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
+                              <Badge key={tag} variant="secondary" className="text-xs">
                                 {tag}
                               </Badge>
                             ))}
@@ -593,7 +593,7 @@ export default function CustomerManagementPage() {
                       <Label>Payment Methods</Label>
                       <div className="flex flex-wrap gap-2">
                         {selectedCustomer.paymentMethods.map((method) => (
-                          <Badge key={method} variant="outline">
+                          <Badge key={method} variant="secondary">
                             <CreditCard className="h-3 w-3 mr-1" />
                             {method}
                           </Badge>
