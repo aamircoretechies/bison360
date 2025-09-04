@@ -115,10 +115,10 @@ export async function POST(request: NextRequest) {
 
     // Log the event
     await systemLog({
-      action: 'shipping_label_generated',
-      entity: 'order',
+      event: 'shipping_label_generated',
+      entityType: 'order',
       entityId: orderId,
-      details: `Label generated for ${carrier.toUpperCase()} service`,
+      description: `Label generated for ${carrier.toUpperCase()} service`,
       userId: session.user.id,
       meta: JSON.stringify({ 
         carrier, 

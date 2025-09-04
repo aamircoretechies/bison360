@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
 
     // Log webhook event
     await systemLog({
-      action: 'webhook_received',
-      entity: 'grownby',
+      event: 'webhook_received',
+      entityType: 'grownby',
       entityId: data.id || 'unknown',
-      details: `Webhook event: ${event_type}`,
+      description: `Webhook event: ${event_type}`,
       userId: session.user.id,
       meta: JSON.stringify({ event_type, data })
     });
