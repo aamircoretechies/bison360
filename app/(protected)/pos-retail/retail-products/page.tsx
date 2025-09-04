@@ -355,7 +355,7 @@ export default function RetailProductsPage() {
                         <div className="space-y-2">
                           <div className="flex items-start justify-between">
                             <h3 className="font-medium text-sm line-clamp-2">{product.name}</h3>
-                            <Badge variant={stockStatus.color}>{stockStatus.label}</Badge>
+                            <Badge variant={stockStatus.color as any}>{stockStatus.label}</Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">{product.sku}</p>
                           <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
@@ -469,7 +469,7 @@ export default function RetailProductsPage() {
                           <TableCell className="font-medium">${product.price}</TableCell>
                           <TableCell>{product.stock}</TableCell>
                           <TableCell>
-                            <Badge variant={stockStatus.color}>{stockStatus.label}</Badge>
+                            <Badge variant={stockStatus.color as any}>{stockStatus.label}</Badge>
                           </TableCell>
                           <TableCell>{product.salesCount}</TableCell>
                           <TableCell>
