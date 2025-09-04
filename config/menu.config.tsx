@@ -50,7 +50,8 @@ import {
   UserCircle,
   Users,
   Briefcase as WorkIcon,
-  Zap, Link, Truck, Package, Beef,
+  Zap, Link, Truck, Package, Beef, 
+  Calculator, Receipt, RotateCcw, BarChart3, QrCode, CreditCard, DollarSign, Wifi, WifiOff, AlertTriangle, X, Printer, Mail, User, Clock, Tag, Image as ImageIcon, Grid3X3, List, Edit, Trash2, Plus, Search, Filter, Download, Upload, Database, RefreshCw,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
@@ -93,24 +94,28 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'POS & Retail',
     icon: ShoppingCart,
     children: [
-      { title: 'In-Store Sales', path: '#' },
-      { title: 'Cart & Checkout', path: '#' },
-      { title: 'Coupons & Discounts', path: '#' },
-      { title: 'Cash Drawer & Z Reports', path: '#' },
+      { title: 'POS Terminal', path: '/pos-retail/pos-terminal' },
+      { title: 'Sales Dashboard', path: '/pos-retail/sales-dashboard' },
+      { title: 'Transactions Log', path: '/pos-retail/transactions-log' },
+      { title: 'Z-Report', path: '/pos-retail/z-report' },
+      { title: 'Retail Products', path: '/pos-retail/retail-products' },
+      { title: 'Customer Management', path: '/pos-retail/customer-management' },
+      { title: 'Refunds & Cancellations', path: '/pos-retail/refunds-cancellations' },
+      { title: 'Audit Logs', path: '/pos-retail/audit-logs' },
     ],
   },
   { heading: 'Global Settings' },
-  {
+ /*  {
     title: 'Reports & Compliance',
     icon: FileText,
     children: [
-      { title: 'USDA Reports', path: '#' },
-      { title: 'Meat Movement & Shrinkage', path: '#' },
-      { title: 'Sales Reports', path: '#' },
-      { title: 'Audit Logs', path: '#' },
+      { title: 'USDA Reports', path: '/reports/usda-reports' },
+      { title: 'Meat Movement & Shrinkage', path: '/reports/meat-movement-shrinkage' },
+      { title: 'Sales Reports', path: '/reports/sales-reports' },
+      { title: 'Audit Logs', path: '/reports/audit-logs' },
     ],
-  },
-   {
+  }, */
+   /* {
     title: 'User Management',
     icon: ShieldUser,
     children: [
@@ -132,25 +137,26 @@ export const MENU_SIDEBAR: MenuConfig = [
       },
      
     ],
-  },
-  {
-    title: 'Integrations',
-    icon: Link,
-    children: [
-      { title: 'Salesforce Sync', path: '#' },
-      { title: 'GrownBy Orders', path: '#' },
-      { title: 'Square & Stripe Logs', path: '#' },
-      { title: 'Shipping Services', path: '#' },
-    ],
-  },
+  }, */
+          {
+          title: 'Integrations',
+          icon: Link,
+          children: [
+            { title: 'Dashboard', path: '/integrations/dashboard' },
+            { title: 'Salesforce Sync', path: '/integrations/salesforce-sync' },
+            { title: 'GrownBy Orders', path: '/integrations/grownby-orders' },
+            { title: 'Square & Stripe Logs', path: '/integrations/square-stripe-logs' },
+            { title: 'Shipping Services', path: '/integrations/shipping-services' },
+          ],
+        },
   {
     title: 'Settings / Admin',
     icon: Settings,
     children: [
-      { title: 'Master Settings', path: '#' },
-      { title: 'Notifications Setup', path: '#' },
-      { title: 'Offline Sync Logs', path: '#' },
-      { title: 'Backup & Restore', path: '#' },
+      { title: 'Master Settings', path: '/settings-admin/master-settings' },
+      { title: 'Notifications Setup', path: '/settings-admin/notifications-setup' },
+      { title: 'Offline Sync Logs', path: '/settings-admin/offline-sync-logs' },
+      { title: 'Backup & Restore', path: '/settings-admin/backup-restore' },
     ],
   },
   /* { heading: 'User' }, */
