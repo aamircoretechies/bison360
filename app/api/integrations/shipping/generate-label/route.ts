@@ -120,12 +120,12 @@ export async function POST(request: NextRequest) {
       entityId: orderId,
       details: `Label generated for ${carrier.toUpperCase()} service`,
       userId: session.user.id,
-      meta: { 
+      meta: JSON.stringify({ 
         carrier, 
         service, 
         trackingNumber: labelResult.trackingNumber,
         cost: labelResult.cost 
-      }
+      })
     });
 
     return NextResponse.json({

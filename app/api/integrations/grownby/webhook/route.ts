@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       entityId: data.id || 'unknown',
       details: `Webhook event: ${event_type}`,
       userId: session.user.id,
-      meta: { event_type, data }
+      meta: JSON.stringify({ event_type, data })
     });
 
     return NextResponse.json({ success: true });
