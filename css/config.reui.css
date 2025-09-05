@@ -22,6 +22,7 @@
   --mono: oklch(14.1% 0.005 285.823); /* --color-zinc-950 */
   --mono-foreground: oklch(1 0 0); /* --color-white */
   --sand: #B17A50;
+  --beige: #f4f0eb;
 
   /** Base Styles **/
   --border: oklch(
@@ -52,6 +53,7 @@
   --destructive-foreground: oklch(1 0 0); /* --color-white */
   --mono: oklch(87.1% 0.006 286.286); /* --color-zinc-300 */
   --mono-foreground: oklch(0 0 0); /* --color-black */
+  --beige: #f4f0eb;
 
   /** Base Styles **/
   --border: oklch(27.4% 0.006 286.033); /* --color-zinc-800 */
@@ -95,6 +97,7 @@
   --color-ring: var(--ring);
 
   --color-sand: var(--sand);
+  --color-beige: var(--beige);
 
   --radius-xl: calc(var(--radius) + 4px);
   --radius-lg: var(--radius);

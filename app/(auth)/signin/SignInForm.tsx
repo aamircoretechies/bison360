@@ -195,7 +195,7 @@ export default function SignInPage() {
           </Button>
         </div>
 
-        <p className="text-sm text-muted-foreground text-center">
+       {/*  <p className="text-sm text-muted-foreground text-center">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
@@ -203,7 +203,7 @@ export default function SignInPage() {
           >
             Sign Up
           </Link>
-        </p>
+        </p> */}
       </form>
     </Form>
   );

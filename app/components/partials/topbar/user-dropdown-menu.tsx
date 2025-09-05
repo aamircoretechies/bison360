@@ -80,57 +80,18 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
 
         <DropdownMenuSeparator />
 
-        {/* Menu Items */}
+      
         <DropdownMenuItem asChild>
           <Link
-            href="#"
-            className="flex items-center gap-2"
-          >
-            <UserCircle />
-            Public Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
-            href="#"
+            href="/settings-admin/master-settings"
             className="flex items-center gap-2"
           >
             <User />
-            My Profile
+            Account
           </Link>
         </DropdownMenuItem>
 
-        {/* My Account Submenu */}
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="flex items-center gap-2">
-            <Settings />
-            My Account
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent className="w-48">
-           
-            <DropdownMenuItem asChild>
-              <Link
-                href="#"
-                className="flex items-center gap-2"
-              >
-                <FileText />
-                My Profile
-              </Link>
-            </DropdownMenuItem>
-           
-           
-            <DropdownMenuItem asChild>
-              <Link
-                href="#"
-                className="flex items-center gap-2"
-              >
-                <Users />
-                Members & Roles
-              </Link>
-            </DropdownMenuItem>
-           
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+       
 
        
 
