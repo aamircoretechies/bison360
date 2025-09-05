@@ -105,7 +105,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     ],
   },
   { heading: 'Global Settings' },
- /*  {
+  {
     title: 'Reports & Compliance',
     icon: FileText,
     children: [
@@ -114,8 +114,8 @@ export const MENU_SIDEBAR: MenuConfig = [
       { title: 'Sales Reports', path: '/reports/sales-reports' },
       { title: 'Audit Logs', path: '/reports/audit-logs' },
     ],
-  }, */
-   /* {
+  }, 
+    {
     title: 'User Management',
     icon: ShieldUser,
     children: [
@@ -137,7 +137,7 @@ export const MENU_SIDEBAR: MenuConfig = [
       },
      
     ],
-  }, */
+  }, 
           {
           title: 'Integrations',
           icon: Link,
