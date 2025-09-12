@@ -149,7 +149,7 @@ export const MENU_SIDEBAR: MenuConfig = [
             { title: 'Shipping Services', path: '/integrations/shipping-services' },
           ],
         },
-  {
+ /*  {
     title: 'Settings / Admin',
     icon: Settings,
     children: [
@@ -158,7 +158,7 @@ export const MENU_SIDEBAR: MenuConfig = [
       { title: 'Offline Sync Logs', path: '/settings-admin/offline-sync-logs' },
       { title: 'Backup & Restore', path: '/settings-admin/backup-restore' },
     ],
-  },
+  }, */
   /* { heading: 'User' }, */
   /* {
     title: 'Public Profile',
