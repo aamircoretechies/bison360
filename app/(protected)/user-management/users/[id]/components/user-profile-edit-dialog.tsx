@@ -39,9 +39,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoaderCircleIcon } from 'lucide-react';
-import { User, UserRole } from '@/app/models/user';
-import { useRoleSelectQuery } from '../../../roles/hooks/use-role-select-query';
-import { UserStatusProps } from '../../constants/status';
+import { UserData } from '@/lib/api/types';
+import { ProfileEditService } from '@/lib/api/profile-edit-service';
+import { useProfileEditMutation } from '@/lib/api/hooks/use-profile-edit-mutation';
 import {
   UserProfileSchema,
   UserProfileSchemaType,
@@ -54,92 +54,53 @@ const UserProfileEditDialog = ({
 }: {
   open: boolean;
   closeDialog: () => void;
-  user: User;
+  user: UserData;
 }) => {
-  const queryClient = useQueryClient();
-
-  // Fetch available roles
-  const { data: roleList } = useRoleSelectQuery();
+  // Get role and status options from service
+  const roleOptions = ProfileEditService.getRoleOptions();
+  const statusOptions = ProfileEditService.getStatusOptions();
 
   const form = useForm<UserProfileSchemaType>({
     resolver: zodResolver(UserProfileSchema),
     defaultValues: {
-      name: user?.name || '',
-      roleId: user?.roleId || '',
-      status: user?.status || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      user_role: user?.user_role || 1,
+      status: user?.user_active_inactive_blocked_status || 1,
     },
     mode: 'onSubmit',
   });
 
+  // Profile edit mutation
+  const editProfileMutation = useProfileEditMutation();
+
   useEffect(() => {
-    if (open) {
+    if (open && user) {
       form.reset({
-        name: user?.name || '',
-        roleId: user?.roleId || '',
-        status: user?.status || '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        user_role: user.user_role || 1,
+        status: user.user_active_inactive_blocked_status || 1,
       });
     }
   }, [open, user, form]);
 
-  const mutation = useMutation({
-    mutationFn: async (values: UserProfileSchemaType) => {
-      const response = await apiFetch(`/api/user-management/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      const message = 'User updated successfully';
-
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="success">
-            <AlertIcon>
-              <RiCheckboxCircleFill />
-            </AlertIcon>
-            <AlertTitle>{message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-
-      queryClient.invalidateQueries({ queryKey: ['user-users'] });
-      queryClient.invalidateQueries({ queryKey: ['user-user'] });
-      closeDialog();
-    },
-    onError: (error: Error) => {
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="destructive">
-            <AlertIcon>
-              <RiErrorWarningFill />
-            </AlertIcon>
-            <AlertTitle>{error.message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-    },
-  });
-
-  const isProcessing = mutation.status === 'pending';
+  const isProcessing = editProfileMutation.isPending;
 
   const handleSubmit = (values: UserProfileSchemaType) => {
-    mutation.mutate(values);
+    editProfileMutation.mutate({
+      user_id: user.user_id,
+      first_name: values.first_name,
+      last_name: values.last_name,
+      user_role: values.user_role,
+      status: values.status,
+    }, {
+      onSuccess: () => {
+        closeDialog();
+        // Redirect to users list after successful update
+        window.location.href = '/user-management/users';
+      },
+    });
   };
 
   return (
@@ -153,46 +114,59 @@ const UserProfileEditDialog = ({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
-            {mutation.status === 'error' && (
+            {editProfileMutation.isError && (
               <Alert variant="destructive">
-                <AlertDescription>{mutation.error.message}</AlertDescription>
+                <AlertDescription>{editProfileMutation.error?.message}</AlertDescription>
               </Alert>
             )}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="first_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="last_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter user name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="roleId"
+              name="user_role"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={(value) => field.onChange(value)}
-                      defaultValue={field.value}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      value={field.value ? String(field.value) : ''}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          {roleList?.map((role: UserRole) => (
-                            <SelectItem key={role.id} value={role.id}>
-                              {role.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
+                        {roleOptions.map((role) => (
+                          <SelectItem key={role.value} value={String(role.value)}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -208,22 +182,18 @@ const UserProfileEditDialog = ({
                   <FormLabel>Status</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={(value) => field.onChange(value)}
-                      defaultValue={field.value}
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      value={field.value ? String(field.value) : ''}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select a status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          {Object.entries(UserStatusProps).map(
-                            ([status, { label }]) => (
-                              <SelectItem key={status} value={status}>
-                                {label}
-                              </SelectItem>
-                            ),
-                          )}
-                        </SelectGroup>
+                        {statusOptions.map((status) => (
+                          <SelectItem key={status.value} value={String(status.value)}>
+                            {status.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>

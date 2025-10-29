@@ -26,7 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoaderCircleIcon } from 'lucide-react';
-import { User } from '@/app/models/user';
+import { UserData } from '@/lib/api/types';
+import { useProfileDeleteMutation } from '@/lib/api/hooks/use-profile-delete-mutation';
 
 // Validation schema for email confirmation
 const EmailConfirmationSchema = (userEmail: string) =>
@@ -47,7 +48,7 @@ type EmailConfirmationSchemaType = z.infer<
 interface UserDeleteDialogProps {
   open: boolean;
   closeDialog: () => void;
-  user: User;
+  user: UserData;
 }
 
 const UserDeleteDialog = ({
@@ -66,63 +67,19 @@ const UserDeleteDialog = ({
     mode: 'onChange',
   });
 
-  // Define the mutation for deleting the user
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiFetch(`/api/user-management/users/${user.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      const message = 'User deleted successfully.';
-
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="success">
-            <AlertIcon>
-              <RiCheckboxCircleFill />
-            </AlertIcon>
-            <AlertTitle>{message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-
-      // Update user data
-      queryClient.invalidateQueries({ queryKey: ['user-user'] });
-
-      //router.push('/user-management/users/');
-      closeDialog();
-    },
-    onError: (error: Error) => {
-      const message = error.message;
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="destructive">
-            <AlertIcon>
-              <RiErrorWarningFill />
-            </AlertIcon>
-            <AlertTitle>{message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-    },
-  });
+  // Profile delete mutation
+  const deleteProfileMutation = useProfileDeleteMutation();
 
   const handleSubmit = () => {
-    mutation.mutate();
+    deleteProfileMutation.mutate({
+      user_id: user.user_id,
+    }, {
+      onSuccess: () => {
+        closeDialog();
+        // Redirect to users list after successful deletion
+        window.location.href = '/user-management/users';
+      },
+    });
   };
 
   return (
@@ -169,10 +126,10 @@ const UserDeleteDialog = ({
                   disabled={
                     !form.formState.isDirty ||
                     !form.formState.isValid ||
-                    mutation.status === 'pending'
+                    deleteProfileMutation.isPending
                   }
                 >
-                  {mutation.status === 'pending' && (
+                  {deleteProfileMutation.isPending && (
                     <LoaderCircleIcon className="animate-spin" />
                   )}
                   Delete user account

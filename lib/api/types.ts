@@ -243,6 +243,62 @@ export interface AddUserErrorResponse {
   status: number;
 }
 
+// Profile Edit API Types
+export interface ProfileEditRequest {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  user_role: number;
+  status: number;
+}
+
+export interface ProfileEditResponse {
+  data: {
+    user_id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    email_verified_status: number;
+    mobile_number: string | null;
+    mobile_number_country_code: string | null;
+    status: number;
+    created: string;
+    updated: string | null;
+    deleted: number;
+    profile_image: string | null;
+    address1: string | null;
+    address2: string | null;
+    user_role: number;
+    user_role_description: string;
+    user_active_inactive_blocked_status: number;
+    user_active_inactive_blocked_status_description: string;
+    is2_fa_enabled: number;
+    last_login_updated: string | null;
+  };
+  message: string;
+  status: number;
+}
+
+export interface ProfileEditErrorResponse {
+  message: string;
+  status: number;
+}
+
+// Profile Delete API Types
+export interface ProfileDeleteRequest {
+  user_id: number;
+}
+
+export interface ProfileDeleteResponse {
+  message: string;
+  status: number;
+}
+
+export interface ProfileDeleteErrorResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;
