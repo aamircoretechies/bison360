@@ -2,10 +2,9 @@
 
 import React, { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { Activity, MoveLeft, UserPen } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { MoveLeft, UserPen } from 'lucide-react';
+import { UserData } from '@/lib/api/types';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -46,9 +45,12 @@ export default function UserLayout({
   const { id } = use(params);
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Use local state to control active tab
   const [activeTab, setActiveTab] = useState<string>('');
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Define your nav routes
   const navRoutes = useMemo<NavRoutes>(
@@ -58,11 +60,12 @@ export default function UserLayout({
         icon: UserPen,
         path: `/user-management/users/${id}`,
       },
-      logs: {
-        title: 'Activity Logs',
-        icon: Activity,
-        path: `/user-management/users/${id}/logs`,
-      },
+      // Commented out Activity Logs as it's currently not working
+      // logs: {
+      //   title: 'Activity Logs',
+      //   icon: Activity,
+      //   path: `/user-management/users/${id}/logs`,
+      // },
     }),
     [id],
   );
@@ -79,28 +82,24 @@ export default function UserLayout({
     }
   }, [navRoutes, pathname]);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ['user-user', id],
-    queryFn: async () => {
-      const response = await apiFetch(`/api/user-management/users/${id}`);
-
-      if (response.status == 404) {
+  // Get user data from URL parameters
+  useEffect(() => {
+    const userDataParam = searchParams.get('data');
+    if (userDataParam) {
+      try {
+        const userData = JSON.parse(decodeURIComponent(userDataParam));
+        setUser(userData);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        // If data parsing fails, redirect back to users list
         router.push('/user-management/users');
       }
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
-      }
-
-      return response.json();
-    },
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 60, // 60 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    retry: 1,
-  });
+    } else {
+      // If no data parameter, redirect back to users list
+      router.push('/user-management/users');
+    }
+  }, [searchParams, router]);
 
   // Handler for tab click: instantly update active tab then navigate.
   const handleTabClick = (key: string, path: string) => {

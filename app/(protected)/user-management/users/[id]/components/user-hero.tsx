@@ -13,10 +13,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { User } from '@/app/models/user';
+import { UserData } from '@/lib/api/types';
+import { UserDetailsService } from '@/lib/api/user-details-service';
 
 interface UserProfileProps {
-  user: User;
+  user: UserData;
   isLoading: boolean;
 }
 
@@ -39,26 +40,29 @@ const UserHero = ({ user, isLoading }: UserProfileProps) => {
     const [showCopied, setShowCopied] = useState(false);
 
     const handleUserIdCopy = () => {
-      copyToClipboard(user.id);
+      copyToClipboard(user.user_id.toString());
       setShowCopied(true);
       setTimeout(() => {
         setShowCopied(false);
       }, 2000);
     };
 
+    const fullName = `${user.first_name} ${user.last_name}`;
+    const initials = UserDetailsService.getUserInitials(user.first_name, user.last_name);
+
     return (
       <div className="flex items-center gap-5 mb-5">
         <Avatar className="h-14 w-14">
-          {user.avatar ? (
-            <AvatarImage src={user.avatar} alt={user.name || ''} />
+          {user.profile_image ? (
+            <AvatarImage src={user.profile_image} alt={fullName} />
           ) : (
             <AvatarFallback className="text-xl">
-              {getInitials(user.name || user.email)}
+              {initials}
             </AvatarFallback>
           )}
         </Avatar>
         <div className="space-y-px">
-          <div className="font-medium text-base">{user.name}</div>
+          <div className="font-medium text-base">{fullName}</div>
           <div className="text-muted-foreground text-sm">{user.email}</div>
           <div>
             <TooltipProvider>
@@ -70,7 +74,7 @@ const UserHero = ({ user, isLoading }: UserProfileProps) => {
                     className="gap-1.5 px-2 py-0.5"
                     onClick={handleUserIdCopy}
                   >
-                    <span>User ID: {user.id}</span>
+                    <span>User ID: {user.user_id}</span>
                     {showCopied && <Check className="text-success size-3" />}
                   </Badge>
                 </TooltipTrigger>

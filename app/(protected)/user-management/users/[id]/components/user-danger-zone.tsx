@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { User } from '@/app/models/user';
+import { UserData } from '@/lib/api/types';
 import UserDeleteDialog from './user-delete-dialog';
 import UserRestoreDialog from './user-restore-dialog';
 
@@ -12,7 +12,7 @@ const UserDangerZone = ({
   user,
   isLoading,
 }: {
-  user: User;
+  user: UserData;
   isLoading: boolean;
 }) => {
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -46,7 +46,6 @@ const UserDangerZone = ({
           <Button
             variant="destructive"
             onClick={() => setDeleteDialogOpen(true)}
-            disabled={user.role?.isProtected}
           >
             Delete user
           </Button>
@@ -87,8 +86,6 @@ const UserDangerZone = ({
   // Render loading if still fetching or if user is null.
   return isLoading || !user ? (
     <Loading />
-  ) : user.isTrashed ? (
-    <RestoreContent />
   ) : (
     <DeleteContent />
   );

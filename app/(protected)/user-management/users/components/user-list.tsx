@@ -167,7 +167,49 @@ const UserList = () => {
 
   const handleRowClick = (row: TransformedUser) => {
     const userId = row.id;
-    redirect(`/user-management/users/${userId}`);
+    
+    // Map role description to role number
+    const getRoleNumber = (roleDescription: string): number => {
+      const roleMap: { [key: string]: number } = {
+        'Administrator': 1,
+        'Customer': 2,
+        'Guest': 3,
+        'Manager': 4,
+        'Member': 5,
+        'Owner': 6,
+        'Staff': 7,
+        'Support': 8,
+        'Vendor': 9,
+      };
+      return roleMap[roleDescription] || 1;
+    };
+    
+    // Pass user data through URL state
+    const userData = {
+      user_id: parseInt(userId),
+      first_name: row.firstName,
+      last_name: row.lastName,
+      email: row.email,
+      email_verified_status: 1, // Default to verified for now
+      mobile_number: null,
+      mobile_number_country_code: null,
+      status: row.status,
+      created: row.createdAt,
+      updated: null,
+      deleted: 0,
+      profile_image: row.profileImage,
+      address1: null,
+      address2: null,
+      user_role: getRoleNumber(row.role),
+      user_role_description: row.role,
+      user_active_inactive_blocked_status: row.status,
+      user_active_inactive_blocked_status_description: row.statusDescription,
+      is2_fa_enabled: 0,
+      last_login_updated: row.lastSignIn,
+    };
+    
+    // Navigate with state
+    window.location.href = `/user-management/users/${userId}?data=${encodeURIComponent(JSON.stringify(userData))}`;
   };
 
   const columns = useMemo<ColumnDef<TransformedUser>[]>(
