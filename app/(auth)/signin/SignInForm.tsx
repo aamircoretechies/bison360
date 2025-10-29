@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RiErrorWarningFill } from "@remixicon/react";
 import { AlertCircle, Eye, EyeOff, LoaderCircleIcon } from "lucide-react";
-import { signIn, getCsrfToken } from "next-auth/react";
 import { useForm } from "react-hook-form";
 
 import { Alert, AlertIcon, AlertTitle } from "@/components/ui/alert";
@@ -22,18 +21,45 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { getSigninSchema, SigninSchemaType } from "../forms/signin-schema";
+import LoginService from "@/lib/api/login-service";
+import SharedPreferences from "@/lib/shared-preferences";
 
 export default function SignInPage() {
   const router = useRouter();
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check if user is already authenticated on component mount
+  useEffect(() => {
+    const checkAuthentication = () => {
+      try {
+        const bearerToken = SharedPreferences.getBearerToken();
+        
+        if (bearerToken) {
+          console.log('User already authenticated, redirecting to dashboard...');
+          // User is already logged in, redirect to dashboard
+          router.push('/');
+          return;
+        }
+        
+        // User is not authenticated, show the login form
+        setIsCheckingAuth(false);
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuthentication();
+  }, [router]);
 
   const form = useForm<SigninSchemaType>({
     resolver: zodResolver(getSigninSchema()),
     defaultValues: {
-      email: "demo@kt.com",
-      password: "demo123",
+      email: "",
+      password: "",
       rememberMe: false,
     },
   });
@@ -43,26 +69,20 @@ export default function SignInPage() {
     setError(null);
 
     try {
-      const csrfToken = await getCsrfToken();
-
-      const response = await signIn("credentials", {
-        redirect: false,
+      const response = await LoginService.login({
         email: values.email,
         password: values.password,
         rememberMe: values.rememberMe,
-        csrfToken,
       });
 
-      if (response?.error) {
-        try {
-          const errorData = JSON.parse(response.error);
-          setError(errorData.message);
-        } catch {
-          setError(response.error);
-        }
-      } else {
-        router.push("/");
-      }
+      // Login successful - redirect to dashboard
+      console.log('Login successful, redirecting to dashboard...');
+      
+      // Small delay to ensure localStorage is updated
+      setTimeout(() => {
+        // Force a page reload to ensure authentication state is updated
+        window.location.href = '/';
+      }, 100);
     } catch (err) {
       setError(
         err instanceof Error
@@ -76,10 +96,19 @@ export default function SignInPage() {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="block w-full space-y-5"
-      >
+      {/* Show loading while checking authentication */}
+      {isCheckingAuth ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-2">
+            <LoaderCircleIcon className="size-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">Checking authentication...</span>
+          </div>
+        </div>
+      ) : (
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="block w-full space-y-5"
+        >
         <div className="space-y-1.5 pb-3">
           <h1 className="text-2xl font-semibold tracking-tight text-center">
             Sign in to <span className="text-primary">Bison360</span>
@@ -91,10 +120,7 @@ export default function SignInPage() {
             <RiErrorWarningFill className="text-primary" />
           </AlertIcon>
           <AlertTitle className="text-accent-foreground">
-            Use <span className="text-mono font-semibold">demo@kt.com</span>{" "}
-            username and{" "}
-            <span className="text-mono font-semibold">demo123</span> for demo
-            access.
+            Enter your email and password to sign in to Bison360.
           </AlertTitle>
         </Alert>
 
@@ -204,7 +230,8 @@ export default function SignInPage() {
             Sign Up
           </Link>
         </p> */}
-      </form>
+        </form>
+      )}
     </Form>
   );
 }

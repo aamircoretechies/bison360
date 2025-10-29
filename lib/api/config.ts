@@ -7,7 +7,7 @@
 export const API_CONFIG = {
   // Base URLs for different environments
   BASE_URLS: {
-    DEVELOPMENT: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+    DEVELOPMENT: process.env.NEXT_PUBLIC_API_URL || 'https://jaap.live/bison-apis',
     STAGING: process.env.NEXT_PUBLIC_API_URL_STAGING || 'https://staging-api.bison360.com',
     PRODUCTION: process.env.NEXT_PUBLIC_API_URL_PROD || 'https://api.bison360.com',
   },
@@ -47,7 +47,7 @@ export const API_CONFIG = {
 export const API_MODULES = {
   // Authentication
   AUTH: {
-    LOGIN: 'login',
+    LOGIN: 'users/login',
     LOGOUT: 'logout',
     REGISTER: 'register',
     REFRESH: 'refresh',

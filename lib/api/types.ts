@@ -101,9 +101,17 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: User;
-  tokens: AuthTokens;
-  permissions: string[];
+  user_role: number;
+  bearer_token: string;
+  user_id: number;
+  message: string;
+  active_block_status: number;
+  status: number;
+}
+
+export interface LoginErrorResponse {
+  message: string;
+  status: number;
 }
 
 export interface RegisterRequest {

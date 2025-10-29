@@ -1,28 +1,40 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { ScreenLoader } from '@/components/common/screen-loader';
 import { Demo1Layout } from '../components/layouts/demo1/layout';
+import LoginService from '@/lib/api/login-service';
+import SharedPreferences from '@/lib/shared-preferences';
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    // Check if user is logged in using shared preferences
+    const isLoggedIn = SharedPreferences.isAuthenticated();
+    setIsAuthenticated(isLoggedIn);
+    
+    if (!isLoggedIn) {
       router.push('/signin');
     }
-  }, [status, router]);
+  }, [router]);
 
-  if (status === 'loading') {
+  // Show loading while checking authentication
+  if (isAuthenticated === null) {
     return <ScreenLoader />;
   }
 
-  return session ? <Demo1Layout>{children}</Demo1Layout> : null;
+  // If not authenticated, don't render anything (redirect will happen)
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // If authenticated, render the protected content
+  return <Demo1Layout>{children}</Demo1Layout>;
 }

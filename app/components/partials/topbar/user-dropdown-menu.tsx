@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { I18N_LANGUAGES, Language } from '@/i18n/config';
 import {
   BetweenHorizontalStart,
@@ -14,7 +15,6 @@ import {
   UserCircle,
   Users,
 } from 'lucide-react';
-import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/providers/i18n-provider';
 import { Badge } from '@/components/ui/badge';
@@ -32,11 +32,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
+import LoginService from '@/lib/api/login-service';
+import SharedPreferences from '@/lib/shared-preferences';
 
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
-  const { data: session } = useSession();
+  const router = useRouter();
   const { changeLanguage, language } = useLanguage();
   const { theme, setTheme } = useTheme();
+  
+  // Get user data from shared preferences
+  const userData = SharedPreferences.getAuthData();
 
   const handleLanguage = (lang: Language) => {
     changeLanguage(lang.code);
@@ -44,6 +49,12 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
 
   const handleThemeToggle = (checked: boolean) => {
     setTheme(checked ? 'dark' : 'light');
+  };
+
+  const handleLogout = () => {
+    SharedPreferences.clearAuthData();
+    // Force redirect to signin page
+    window.location.href = '/signin';
   };
 
   return (
@@ -63,13 +74,13 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
                 href="#"
                 className="text-sm text-mono hover:text-primary font-semibold"
               >
-                {session?.user.name || ''}
+                User ID: {userData.user_id || 'N/A'}
               </Link>
               <Link
                 href="mailto:c.fisher@gmail.com"
                 className="text-xs text-muted-foreground hover:text-primary"
               >
-                {session?.user.email || ''}
+                Role: {userData.user_role || 'N/A'}
               </Link>
             </div>
           </div>
@@ -105,7 +116,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             variant="outline"
             size="sm"
             className="w-full"
-            onClick={() => signOut()}
+            onClick={handleLogout}
           >
             Logout
           </Button>
