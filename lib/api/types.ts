@@ -129,6 +129,80 @@ export interface LogoutErrorResponse {
   status: number;
 }
 
+// Users API Types
+export interface UsersRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  user_role?: number;
+  user_status?: number;
+}
+
+export interface UserData {
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  email_verified_status: number;
+  mobile_number: string | null;
+  mobile_number_country_code: string | null;
+  status: number;
+  created: string;
+  updated: string | null;
+  deleted: number;
+  profile_image: string | null;
+  address1: string | null;
+  address2: string | null;
+  user_role: number;
+  user_role_description: string;
+  user_active_inactive_blocked_status: number;
+  user_active_inactive_blocked_status_description: string;
+  is2_fa_enabled: number;
+  last_login_updated: string;
+}
+
+export interface Pageable {
+  pageNumber: number;
+  pageSize: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  offset: number;
+  paged: boolean;
+  unpaged: boolean;
+}
+
+export interface UsersData {
+  content: UserData[];
+  pageable: Pageable;
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface UsersResponse {
+  data: UsersData;
+  message: string;
+  status: number;
+}
+
+export interface UsersErrorResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

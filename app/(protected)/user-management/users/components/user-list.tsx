@@ -41,6 +41,24 @@ import { User, UserStatus } from '@/app/models/user';
 import { useRoleSelectQuery } from '../../roles/hooks/use-role-select-query';
 import { getUserStatusProps, UserStatusProps } from '../constants/status';
 import UserInviteDialog from './user-add-dialog';
+import { useUsersQuery } from '@/lib/api/hooks/use-users-query';
+import { UsersService } from '@/lib/api/users-service';
+import { UserData } from '@/lib/api/types';
+
+// Interface for transformed user data
+interface TransformedUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: number;
+  statusDescription: string;
+  createdAt: string;
+  lastSignIn: string;
+  profileImage: string | null;
+  firstName: string;
+  lastName: string;
+}
 
 const UserList = () => {
   const [pagination, setPagination] = useState<PaginationState>({
@@ -99,31 +117,33 @@ const UserList = () => {
     return response.json();
   };
 
-  // Users query
-  const { data, isLoading } = useQuery({
-    queryKey: [
-      'user-users',
-      pagination,
-      sorting,
-      searchQuery,
-      selectedRole,
-      selectedStatus,
-    ],
-    queryFn: () =>
-      fetchUsers({
-        pageIndex: pagination.pageIndex,
-        pageSize: pagination.pageSize,
-        sorting,
-        searchQuery,
-        selectedRole,
-        selectedStatus,
-      }),
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 60, // 60 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    retry: 1,
+  // Users query using new API
+  const { data: usersResponse, isLoading, error } = useUsersQuery({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    search: searchQuery || undefined,
+    user_role: selectedRole && selectedRole !== 'all' ? parseInt(selectedRole) : undefined,
+    user_status: selectedStatus && selectedStatus !== 'all' ? parseInt(selectedStatus) : undefined,
   });
+
+  // Transform API response to match DataGrid format
+  const data = usersResponse ? {
+    data: usersResponse.data.content.map((user: UserData): TransformedUser => ({
+      id: user.user_id.toString(),
+      name: `${user.first_name} ${user.last_name}`,
+      email: user.email,
+      role: user.user_role_description,
+      status: user.user_active_inactive_blocked_status,
+      statusDescription: user.user_active_inactive_blocked_status_description,
+      createdAt: user.created,
+      lastSignIn: user.last_login_updated,
+      profileImage: user.profile_image,
+      firstName: user.first_name,
+      lastName: user.last_name,
+    })),
+    totalCount: usersResponse.data.totalElements,
+    pageCount: usersResponse.data.totalPages,
+  } : undefined;
 
   const handleRoleSelection = (roleId: string) => {
     setSelectedRole(roleId);
@@ -135,12 +155,12 @@ const UserList = () => {
     setPagination({ ...pagination, pageIndex: 0 });
   };
 
-  const handleRowClick = (row: User) => {
+  const handleRowClick = (row: TransformedUser) => {
     const userId = row.id;
     redirect(`/user-management/users/${userId}`);
   };
 
-  const columns = useMemo<ColumnDef<User>[]>(
+  const columns = useMemo<ColumnDef<TransformedUser>[]>(
     () => [
       {
         accessorKey: 'name',
@@ -153,9 +173,11 @@ const UserList = () => {
           />
         ),
         cell: ({ row }) => {
-          const user = row.original;
-          const avatarUrl = user.avatar || null;
-          const initials = getInitials(user.name || user.email);
+          const user = row.original as unknown as TransformedUser;
+          const avatarUrl = user.profileImage || null;
+          const initials = user.profileImage 
+            ? null 
+            : UsersService.getUserInitials(user.firstName || '', user.lastName || '');
 
           return (
             <div className="flex items-center gap-3">
@@ -163,7 +185,7 @@ const UserList = () => {
                 {avatarUrl && (
                   <AvatarImage src={avatarUrl} alt={user.name || ''} />
                 )}
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback>{initials || getInitials(user.name || user.email)}</AvatarFallback>
               </Avatar>
               <div className="space-y-px">
                 <div className="font-medium text-sm">{user.name}</div>
@@ -191,7 +213,7 @@ const UserList = () => {
         enableHiding: false,
       },
       {
-        accessorKey: 'role_name',
+        accessorKey: 'role',
         id: 'role_nameme',
         header: ({ column }) => (
           <DataGridColumnHeader
@@ -202,12 +224,13 @@ const UserList = () => {
         ),
         size: 150,
         cell: ({ row }) => {
-          const role = row.original.role || [];
+          const user = row.original as unknown as TransformedUser;
+          const role = user.role;
           if (!role) return '-';
 
           return (
             <Badge variant="secondary" appearance="outline">
-              {role.name}
+              {role}
             </Badge>
           );
         },
@@ -229,23 +252,22 @@ const UserList = () => {
           />
         ),
         cell: ({ row }) => {
-          const statusProps = getUserStatusProps(
-            row.original.status as UserStatus,
-          );
-          const isTrashed = row.original.isTrashed;
-          const variant = statusProps.variant as keyof BadgeProps['variant'];
+          const user = row.original as unknown as TransformedUser;
+          const status = user.status;
+          const statusDescription = user.statusDescription;
+          
+          // Map status to variant
+          let variant: 'secondary' | 'success' | 'warning' | 'destructive' = 'secondary';
+          if (status === 1) variant = 'success';
+          else if (status === 2) variant = 'warning';
+          else if (status === 3) variant = 'destructive';
 
           return (
             <div className="inline-flex gap-2.5">
               <Badge variant={variant} appearance="ghost">
                 <BadgeDot />
-                {statusProps.label}
+                {statusDescription}
               </Badge>
-              {isTrashed && (
-                <Badge variant="destructive" appearance="outline">
-                  Trashed
-                </Badge>
-              )}
             </div>
           );
         },
@@ -267,7 +289,7 @@ const UserList = () => {
             column={column}
           />
         ),
-        cell: (info) => formatDate(new Date(info.getValue() as string)),
+        cell: (info) => UsersService.formatDate(info.getValue() as string),
         size: 150,
         meta: {
           headerTitle: 'Joined',
@@ -277,7 +299,7 @@ const UserList = () => {
         enableHiding: true,
       },
       {
-        accessorKey: 'lastSignInAt',
+        accessorKey: 'lastSignIn',
         id: 'lastSignInAt',
         header: ({ column }) => (
           <DataGridColumnHeader
@@ -288,7 +310,7 @@ const UserList = () => {
         ),
         cell: (info) =>
           info.getValue()
-            ? formatDateTime(new Date(info.getValue() as string))
+            ? UsersService.formatLastLogin(info.getValue() as string)
             : '-',
         size: 175,
         meta: {
@@ -323,8 +345,8 @@ const UserList = () => {
   const table = useReactTable({
     columns,
     data: data?.data || [],
-    pageCount: Math.ceil((data?.pagination.total || 0) / pagination.pageSize),
-    getRowId: (row: User) => row.id,
+    pageCount: Math.ceil((data?.totalCount || 0) / pagination.pageSize),
+    getRowId: (row: TransformedUser) => row.id,
     state: {
       pagination,
       sorting,
@@ -385,11 +407,13 @@ const UserList = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              {roleList?.map((role: User) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.name}
-                </SelectItem>
-              ))}
+              {Array.isArray(roleList) && roleList.length > 0
+                ? roleList.map((role: User) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))
+                : null}
             </SelectContent>
           </Select>
           <Select
@@ -426,11 +450,30 @@ const UserList = () => {
     );
   };
 
+  // Show error state if API fails
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-destructive mb-2">
+            Failed to load users
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : 'An unexpected error occurred'}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <DataGrid
         table={table}
-        recordCount={data?.pagination.total || 0}
+        recordCount={data?.totalCount || 0}
         isLoading={isLoading}
         onRowClick={handleRowClick}
         tableLayout={{

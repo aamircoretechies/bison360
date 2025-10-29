@@ -6,18 +6,34 @@ import { apiFetch } from '@/lib/api';
 export const useRoleSelectQuery = () => {
   // Fetch roles for selection
   const fetchRoleList = async () => {
-    const response = await apiFetch('/api/user-management/roles/select');
+    try {
+      const response = await apiFetch('/api/user-management/roles/select');
 
-    if (!response.ok) {
+      if (!response.ok) {
+        toast.error(
+          'Something went wrong while loading the records. Please try again.',
+          {
+            position: 'top-center',
+          },
+        );
+        // Return empty array on error instead of throwing
+        return [];
+      }
+
+      const data = await response.json();
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error('Error fetching roles:', error);
       toast.error(
         'Something went wrong while loading the records. Please try again.',
         {
           position: 'top-center',
         },
       );
+      // Return empty array on error
+      return [];
     }
-
-    return response.json();
   };
 
   return useQuery({

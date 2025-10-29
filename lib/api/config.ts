@@ -62,6 +62,7 @@ export const API_MODULES = {
     PROFILE: 'profile',
     SELECT: 'select',
     RESTORE: 'restore',
+    GET_ALL: 'users/get-all',
   },
   
   // Roles Management
