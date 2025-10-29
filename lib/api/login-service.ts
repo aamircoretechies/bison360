@@ -4,7 +4,7 @@
  */
 
 import { API_CONFIG, API_MODULES } from './config';
-import { LoginRequest, LoginResponse, LoginErrorResponse } from './types';
+import { LoginRequest, LoginResponse, LoginErrorResponse, LogoutRequest, LogoutResponse, LogoutErrorResponse } from './types';
 import SharedPreferences from '@/lib/shared-preferences';
 
 const BASE_URL = API_CONFIG.BASE_URLS.DEVELOPMENT;
@@ -52,6 +52,18 @@ export class LoginService {
       SharedPreferences.setUserRole(data.user_role);
       SharedPreferences.setActiveBlockStatus(data.active_block_status);
       SharedPreferences.setRememberMe(credentials.rememberMe || false);
+      
+      // Store email and password if "Remember me" is checked
+      if (credentials.rememberMe) {
+        SharedPreferences.setSavedEmail(credentials.email);
+        SharedPreferences.setSavedPassword(credentials.password);
+        console.log('Email and password saved for future logins');
+      } else {
+        // Clear saved email and password if "Remember me" is unchecked
+        SharedPreferences.removeItem('bison360_saved_email');
+        SharedPreferences.removeItem('bison360_saved_password');
+        console.log('Saved email and password cleared');
+      }
 
       return data as LoginResponse;
     } catch (error) {
@@ -63,10 +75,59 @@ export class LoginService {
   }
 
   /**
-   * Logout user
+   * Logout user by calling API and clearing local data
    */
-  static logout(): void {
-    SharedPreferences.clearAuthData();
+  static async logout(): Promise<void> {
+    const bearerToken = SharedPreferences.getBearerToken();
+    
+    if (!bearerToken) {
+      // No token to logout, just clear local data
+      SharedPreferences.clearAuthData();
+      return;
+    }
+
+    try {
+      const url = `${BASE_URL}/${API_MODULES.AUTH.LOGOUT}`;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${bearerToken}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.error('Non-JSON response received during logout:', textResponse);
+        // Even if API fails, we should clear local data
+        SharedPreferences.clearAuthData();
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response
+        const errorData: LogoutErrorResponse = data;
+        console.error('Logout API error:', errorData.message);
+        // Even if API fails, we should clear local data
+        SharedPreferences.clearAuthData();
+        return;
+      }
+
+      // Logout successful
+      console.log('Logout successful:', data.message);
+      
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+      // Even if API fails, we should clear local data
+    } finally {
+      // Clear authentication data but preserve saved email and password for "Remember me" functionality
+      SharedPreferences.clearAuthData();
+    }
   }
 
   /**

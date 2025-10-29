@@ -31,7 +31,16 @@ export default function SignInPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // Check if user is already authenticated on component mount
+  const form = useForm<SigninSchemaType>({
+    resolver: zodResolver(getSigninSchema()),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
+
+  // Check if user is already authenticated and load saved email on component mount
   useEffect(() => {
     const checkAuthentication = () => {
       try {
@@ -44,7 +53,29 @@ export default function SignInPage() {
           return;
         }
         
-        // User is not authenticated, show the login form
+        // User is not authenticated, load saved email and password if they exist
+        const savedEmail = SharedPreferences.getSavedEmail();
+        const savedPassword = SharedPreferences.getSavedPassword();
+        const rememberMe = SharedPreferences.getRememberMe();
+        
+        // Auto-fill if we have saved credentials (regardless of rememberMe flag)
+        if (savedEmail) {
+          console.log('Loading saved email:', savedEmail);
+          form.setValue('email', savedEmail);
+          
+          // If password is also saved, auto-fill it and check "Remember me"
+          if (savedPassword) {
+            console.log('Loading saved password');
+            form.setValue('password', savedPassword);
+            form.setValue('rememberMe', true);
+          }
+          // If only email is saved, check if rememberMe was previously set
+          else if (rememberMe) {
+            form.setValue('rememberMe', true);
+          }
+        }
+        
+        // Show the login form
         setIsCheckingAuth(false);
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -53,16 +84,7 @@ export default function SignInPage() {
     };
 
     checkAuthentication();
-  }, [router]);
-
-  const form = useForm<SigninSchemaType>({
-    resolver: zodResolver(getSigninSchema()),
-    defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
-  });
+  }, [router, form]);
 
   async function onSubmit(values: SigninSchemaType) {
     setIsProcessing(true);

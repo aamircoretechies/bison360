@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { I18N_LANGUAGES, Language } from '@/i18n/config';
@@ -14,6 +14,7 @@ import {
   User,
   UserCircle,
   Users,
+  LoaderCircleIcon,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from '@/providers/i18n-provider';
@@ -39,6 +40,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
   const router = useRouter();
   const { changeLanguage, language } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Get user data from shared preferences
   const userData = SharedPreferences.getAuthData();
@@ -51,10 +53,22 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
     setTheme(checked ? 'dark' : 'light');
   };
 
-  const handleLogout = () => {
-    SharedPreferences.clearAuthData();
-    // Force redirect to signin page
-    window.location.href = '/signin';
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent multiple clicks
+    
+    setIsLoggingOut(true);
+    try {
+      // Call the logout API and clear local data
+      await LoginService.logout();
+      // Force redirect to signin page
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Even if logout fails, redirect to signin
+      window.location.href = '/signin';
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -117,8 +131,16 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             size="sm"
             className="w-full"
             onClick={handleLogout}
+            disabled={isLoggingOut}
           >
-            Logout
+            {isLoggingOut ? (
+              <>
+                <LoaderCircleIcon className="size-4 animate-spin mr-2" />
+                Logging out...
+              </>
+            ) : (
+              'Logout'
+            )}
           </Button>
         </div>
       </DropdownMenuContent>

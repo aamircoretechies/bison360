@@ -14,6 +14,8 @@ export class SharedPreferences {
     USER_ROLE: 'user_role',
     ACTIVE_BLOCK_STATUS: 'active_block_status',
     REMEMBER_ME: 'remember_me',
+    SAVED_EMAIL: 'saved_email',
+    SAVED_PASSWORD: 'saved_password',
   } as const;
 
   /**
@@ -162,6 +164,34 @@ export class SharedPreferences {
   }
 
   /**
+   * Store saved email
+   */
+  static setSavedEmail(email: string): void {
+    this.setItem(this.KEYS.SAVED_EMAIL, email);
+  }
+
+  /**
+   * Get saved email
+   */
+  static getSavedEmail(): string | null {
+    return this.getItem(this.KEYS.SAVED_EMAIL);
+  }
+
+  /**
+   * Store saved password
+   */
+  static setSavedPassword(password: string): void {
+    this.setItem(this.KEYS.SAVED_PASSWORD, password);
+  }
+
+  /**
+   * Get saved password
+   */
+  static getSavedPassword(): string | null {
+    return this.getItem(this.KEYS.SAVED_PASSWORD);
+  }
+
+  /**
    * Check if user is authenticated (has bearer token)
    */
   static isAuthenticated(): boolean {
@@ -170,6 +200,7 @@ export class SharedPreferences {
 
   /**
    * Clear all authentication data
+   * Note: Does NOT clear SAVED_EMAIL and SAVED_PASSWORD to preserve them for "Remember me" functionality
    */
   static clearAuthData(): void {
     this.removeItem(this.KEYS.BEARER_TOKEN);
@@ -177,6 +208,16 @@ export class SharedPreferences {
     this.removeItem(this.KEYS.USER_ROLE);
     this.removeItem(this.KEYS.ACTIVE_BLOCK_STATUS);
     this.removeItem(this.KEYS.REMEMBER_ME);
+    // Note: We preserve SAVED_EMAIL and SAVED_PASSWORD to persist login credentials after logout
+  }
+
+  /**
+   * Clear all data including saved email and password
+   */
+  static clearAllData(): void {
+    this.clearAuthData();
+    this.removeItem(this.KEYS.SAVED_EMAIL);
+    this.removeItem(this.KEYS.SAVED_PASSWORD);
   }
 
   /**

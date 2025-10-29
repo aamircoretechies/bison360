@@ -114,6 +114,21 @@ export interface LoginErrorResponse {
   status: number;
 }
 
+// Logout API Types
+export interface LogoutRequest {
+  // No body required for logout
+}
+
+export interface LogoutResponse {
+  message: string;
+  status: number;
+}
+
+export interface LogoutErrorResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;
