@@ -38,7 +38,6 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { User, UserStatus } from '@/app/models/user';
-import { useRoleSelectQuery } from '../../roles/hooks/use-role-select-query';
 import { getUserStatusProps, UserStatusProps } from '../constants/status';
 import UserInviteDialog from './user-add-dialog';
 import { useUsersQuery } from '@/lib/api/hooks/use-users-query';
@@ -73,8 +72,19 @@ const UserList = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>('all');
 
-  // Role select query
-  const { data: roleList } = useRoleSelectQuery();
+  // Get role options from service
+  const roleOptions = [
+    { value: 'all', label: 'All roles' },
+    { value: '1', label: 'Administrator' },
+    { value: '2', label: 'Customer' },
+    { value: '3', label: 'Guest' },
+    { value: '4', label: 'Manager' },
+    { value: '5', label: 'Member' },
+    { value: '6', label: 'Owner' },
+    { value: '7', label: 'Staff' },
+    { value: '8', label: 'Support' },
+    { value: '9', label: 'Vendor' },
+  ];
 
   // Fetch users from the server API
   const fetchUsers = async ({
@@ -406,14 +416,11 @@ const UserList = () => {
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All roles</SelectItem>
-              {Array.isArray(roleList) && roleList.length > 0
-                ? roleList.map((role: User) => (
-                    <SelectItem key={role.id} value={role.id}>
-                      {role.name}
-                    </SelectItem>
-                  ))
-                : null}
+              {roleOptions.map((role) => (
+                <SelectItem key={role.value} value={role.value}>
+                  {role.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select

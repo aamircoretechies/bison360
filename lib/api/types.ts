@@ -203,6 +203,46 @@ export interface UsersErrorResponse {
   status: number;
 }
 
+// Add User API Types
+export interface AddUserRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  user_role: number;
+}
+
+export interface AddUserResponse {
+  data: {
+    user_id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+    email_verified_status: number;
+    mobile_number: string | null;
+    mobile_number_country_code: string | null;
+    status: number;
+    created: string;
+    updated: string | null;
+    deleted: number;
+    profile_image: string | null;
+    address1: string | null;
+    address2: string | null;
+    user_role: number;
+    user_role_description: string;
+    user_active_inactive_blocked_status: number;
+    user_active_inactive_blocked_status_description: string;
+    is2_fa_enabled: number;
+    last_login_updated: string | null;
+  };
+  message: string;
+  status: number;
+}
+
+export interface AddUserErrorResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

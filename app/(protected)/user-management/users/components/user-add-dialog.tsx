@@ -2,12 +2,8 @@
 
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RiCheckboxCircleFill, RiErrorWarningFill } from '@remixicon/react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
-import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
+import { LoaderCircleIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,15 +25,13 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LoaderCircleIcon } from 'lucide-react';
-import { UserRole } from '@/app/models/user';
-import { useRoleSelectQuery } from '../../roles/hooks/use-role-select-query';
 import { UserAddSchema, UserAddSchemaType } from '../forms/user-add-schema';
+import { useAddUserMutation } from '@/lib/api/hooks/use-add-user-mutation';
+import { AddUserService } from '@/lib/api/add-user-service';
 
 const UserAddDialog = ({
   open,
@@ -46,20 +40,22 @@ const UserAddDialog = ({
   open: boolean;
   closeDialog: () => void;
 }) => {
-  const queryClient = useQueryClient();
-
-  // Fetch available roles
-  const { data: roleList } = useRoleSelectQuery();
+  // Get role options from service
+  const roleOptions = AddUserService.getRoleOptions();
 
   const form = useForm<UserAddSchemaType>({
     resolver: zodResolver(UserAddSchema),
     defaultValues: {
-      name: '',
+      first_name: '',
+      last_name: '',
       email: '',
-      roleId: '',
+      user_role: 0,
     },
     mode: 'onSubmit',
   });
+
+  // Add user mutation
+  const addUserMutation = useAddUserMutation();
 
   useEffect(() => {
     if (open) {
@@ -67,63 +63,14 @@ const UserAddDialog = ({
     }
   }, [open, form]);
 
-  const mutation = useMutation({
-    mutationFn: async (values: UserAddSchemaType) => {
-      const response = await apiFetch('/api/user-management/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
-      const message = 'User added successfully';
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="success" close={false}>
-            <AlertIcon>
-              <RiCheckboxCircleFill />
-            </AlertIcon>
-            <AlertTitle>{message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-
-      queryClient.invalidateQueries({ queryKey: ['user-users'] });
-      closeDialog();
-    },
-    onError: (error: Error) => {
-      toast.custom(
-        () => (
-          <Alert variant="mono" icon="destructive" close={false}>
-            <AlertIcon>
-              <RiErrorWarningFill />
-            </AlertIcon>
-            <AlertTitle>{error.message}</AlertTitle>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        },
-      );
-    },
-  });
-
-  const isProcessing = mutation.status === 'pending';
+  const isProcessing = addUserMutation.isPending;
 
   const handleSubmit = (values: UserAddSchemaType) => {
-    mutation.mutate(values);
+    addUserMutation.mutate(values, {
+      onSuccess: () => {
+        closeDialog();
+      },
+    });
   };
 
   return (
@@ -135,19 +82,34 @@ const UserAddDialog = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <DialogBody className="pt-2.5 space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="first_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter first name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="last_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter last name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="email"
@@ -163,26 +125,24 @@ const UserAddDialog = ({
               />
               <FormField
                 control={form.control}
-                name="roleId"
+                name="user_role"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
                     <FormControl>
                       <Select
-                        onValueChange={(value) => field.onChange(value)}
-                        defaultValue={field.value}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value ? String(field.value) : ''}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectGroup>
-                            {roleList?.map((role: UserRole) => (
-                              <SelectItem key={role.id} value={role.id}>
-                                {role.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
+                          {roleOptions.map((role) => (
+                            <SelectItem key={role.value} value={String(role.value)}>
+                              {role.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -197,9 +157,9 @@ const UserAddDialog = ({
               </Button>
               <Button
                 type="submit"
-                disabled={!form.formState.isDirty || isProcessing}
+                disabled={isProcessing}
               >
-                {isProcessing && <LoaderCircleIcon className="animate-spin" />}
+                {isProcessing && <LoaderCircleIcon className="animate-spin mr-2" />}
                 Add user
               </Button>
             </DialogFooter>

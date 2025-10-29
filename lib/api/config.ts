@@ -63,6 +63,7 @@ export const API_MODULES = {
     SELECT: 'select',
     RESTORE: 'restore',
     GET_ALL: 'users/get-all',
+    ADD_USER: 'users/direct-registration',
   },
   
   // Roles Management
