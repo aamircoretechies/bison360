@@ -1,0 +1,488 @@
+/**
+ * API Types and Interfaces
+ * Comprehensive type definitions for enterprise-level API implementation
+ */
+
+import { HTTP_STATUS, API_RESPONSE_TYPES, ERROR_CODES, SORT_DIRECTIONS } from './config';
+
+// Base API Response Interface
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: ApiError;
+  meta?: ApiMeta;
+  timestamp: string;
+  requestId?: string;
+}
+
+// API Error Interface
+export interface ApiError {
+  code: string;
+  message: string;
+  details?: Record<string, any>;
+  field?: string;
+  stack?: string;
+}
+
+// API Meta Information
+export interface ApiMeta {
+  pagination?: PaginationMeta;
+  filters?: Record<string, any>;
+  sort?: SortMeta;
+  total?: number;
+  version?: string;
+}
+
+// Pagination Meta
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+// Sort Meta
+export interface SortMeta {
+  field: string;
+  direction: keyof typeof SORT_DIRECTIONS;
+}
+
+// Request Configuration
+export interface RequestConfig {
+  timeout?: number;
+  retries?: number;
+  headers?: Record<string, string>;
+  params?: Record<string, any>;
+  signal?: AbortSignal;
+  method?: string;
+  url?: string;
+  body?: any;
+}
+
+// API Client Configuration
+export interface ApiClientConfig {
+  baseURL: string;
+  timeout?: number;
+  retries?: number;
+  headers?: Record<string, string>;
+  interceptors?: {
+    request?: RequestInterceptor[];
+    response?: ResponseInterceptor[];
+  };
+}
+
+// Request Interceptor
+export interface RequestInterceptor {
+  onFulfilled?: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
+  onRejected?: (error: any) => any;
+}
+
+// Response Interceptor
+export interface ResponseInterceptor {
+  onFulfilled?: (response: ApiResponse) => ApiResponse | Promise<ApiResponse>;
+  onRejected?: (error: any) => any;
+}
+
+// Authentication Types
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+  rememberMe?: boolean;
+}
+
+export interface LoginResponse {
+  user: User;
+  tokens: AuthTokens;
+  permissions: string[];
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name: string;
+  roleId: string;
+}
+
+// User Management Types
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  roleId: string;
+  status: UserStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastSignInAt?: string;
+  emailVerifiedAt?: string;
+  avatar?: string;
+  role?: UserRole;
+}
+
+export enum UserStatus {
+  INACTIVE = 'INACTIVE',
+  ACTIVE = 'ACTIVE',
+  BLOCKED = 'BLOCKED',
+}
+
+export interface UserRole {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  isProtected: boolean;
+  isDefault: boolean;
+  permissions?: UserPermission[];
+}
+
+export interface UserPermission {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+}
+
+// Inventory Management Types
+export interface InventoryItem {
+  id: string;
+  sku: string;
+  name: string;
+  description?: string;
+  category: string;
+  unit: string;
+  currentStock: number;
+  minStock: number;
+  maxStock: number;
+  costPrice: number;
+  sellingPrice: number;
+  barcode?: string;
+  batchNumber?: string;
+  expiryDate?: string;
+  supplier?: string;
+  location?: string;
+  status: InventoryStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum InventoryStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DISCONTINUED = 'DISCONTINUED',
+}
+
+export interface InventoryBatch {
+  id: string;
+  sku: string;
+  batchNumber: string;
+  quantity: number;
+  receivedDate: string;
+  expiryDate?: string;
+  supplier: string;
+  costPrice: number;
+  status: BatchStatus;
+}
+
+export enum BatchStatus {
+  RECEIVED = 'RECEIVED',
+  IN_STOCK = 'IN_STOCK',
+  EXPIRED = 'EXPIRED',
+  SOLD_OUT = 'SOLD_OUT',
+}
+
+// Livestock Management Types
+export interface Livestock {
+  id: string;
+  eid: string;
+  name?: string;
+  species: string;
+  breed?: string;
+  birthDate?: string;
+  gender: Gender;
+  weight?: number;
+  status: LivestockStatus;
+  location?: string;
+  owner?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+}
+
+export enum LivestockStatus {
+  ACTIVE = 'ACTIVE',
+  SOLD = 'SOLD',
+  DECEASED = 'DECEASED',
+  MISSING = 'MISSING',
+}
+
+export interface LivestockEvent {
+  id: string;
+  livestockId: string;
+  eventType: EventType;
+  eventDate: string;
+  description?: string;
+  location?: string;
+  performedBy?: string;
+  notes?: string;
+}
+
+export enum EventType {
+  BIRTH = 'BIRTH',
+  VACCINATION = 'VACCINATION',
+  MEDICATION = 'MEDICATION',
+  WEIGHING = 'WEIGHING',
+  MOVEMENT = 'MOVEMENT',
+  SALE = 'SALE',
+  DEATH = 'DEATH',
+}
+
+// Orders Management Types
+export interface Order {
+  id: string;
+  orderNumber: string;
+  customerId?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  shippingAddress?: Address;
+  billingAddress?: Address;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  RETURNED = 'RETURNED',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+}
+
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+// POS & Retail Types
+export interface POSTransaction {
+  id: string;
+  transactionNumber: string;
+  cashierId: string;
+  items: POSItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  customerId?: string;
+  createdAt: string;
+}
+
+export interface POSItem {
+  id: string;
+  sku: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export enum PaymentMethod {
+  CASH = 'CASH',
+  CARD = 'CARD',
+  MOBILE = 'MOBILE',
+  CHECK = 'CHECK',
+}
+
+// Reports Types
+export interface Report {
+  id: string;
+  name: string;
+  type: ReportType;
+  parameters: Record<string, any>;
+  status: ReportStatus;
+  generatedAt?: string;
+  fileUrl?: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export enum ReportType {
+  SALES = 'SALES',
+  INVENTORY = 'INVENTORY',
+  LIVESTOCK = 'LIVESTOCK',
+  USDA_COMPLIANCE = 'USDA_COMPLIANCE',
+  AUDIT = 'AUDIT',
+}
+
+export enum ReportStatus {
+  PENDING = 'PENDING',
+  GENERATING = 'GENERATING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+// System Settings Types
+export interface SystemSettings {
+  id: string;
+  name: string;
+  logo?: string;
+  address?: string;
+  websiteURL?: string;
+  supportEmail?: string;
+  supportPhone?: string;
+  language: string;
+  timezone: string;
+  currency: string;
+  currencyFormat: string;
+  socialFacebook?: string;
+  socialTwitter?: string;
+  socialInstagram?: string;
+  socialLinkedIn?: string;
+  socialPinterest?: string;
+  socialYoutube?: string;
+  notifyStockEmail: boolean;
+  notifyStockWeb: boolean;
+  notifyStockThreshold: number;
+  notifyStockRoleIds: string[];
+  notifyNewOrderEmail: boolean;
+  notifyNewOrderWeb: boolean;
+  notifyNewOrderRoleIds: string[];
+  notifyOrderStatusUpdateEmail: boolean;
+  notifyOrderStatusUpdateWeb: boolean;
+  notifyOrderStatusUpdateRoleIds: string[];
+  notifyPaymentFailureEmail: boolean;
+  notifyPaymentFailureWeb: boolean;
+  notifyPaymentFailureRoleIds: string[];
+  notifySystemErrorFailureEmail: boolean;
+  notifySystemErrorWeb: boolean;
+  notifySystemErrorRoleIds: string[];
+}
+
+// File Upload Types
+export interface FileUpload {
+  id: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+export interface FileUploadRequest {
+  file: File;
+  category?: string;
+  metadata?: Record<string, any>;
+}
+
+// Search and Filter Types
+export interface SearchParams {
+  query?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  dir?: keyof typeof SORT_DIRECTIONS;
+  filters?: Record<string, any>;
+}
+
+export interface FilterOption {
+  field: string;
+  operator: FilterOperator;
+  value: any;
+}
+
+export enum FilterOperator {
+  EQUALS = 'equals',
+  NOT_EQUALS = 'not_equals',
+  CONTAINS = 'contains',
+  NOT_CONTAINS = 'not_contains',
+  STARTS_WITH = 'starts_with',
+  ENDS_WITH = 'ends_with',
+  GREATER_THAN = 'greater_than',
+  LESS_THAN = 'less_than',
+  GREATER_THAN_OR_EQUAL = 'greater_than_or_equal',
+  LESS_THAN_OR_EQUAL = 'less_than_or_equal',
+  IN = 'in',
+  NOT_IN = 'not_in',
+  BETWEEN = 'between',
+  IS_NULL = 'is_null',
+  IS_NOT_NULL = 'is_not_null',
+}
+
+// Webhook Types
+export interface WebhookPayload {
+  event: string;
+  data: any;
+  timestamp: string;
+  signature?: string;
+}
+
+export interface WebhookConfig {
+  url: string;
+  events: string[];
+  secret?: string;
+  active: boolean;
+}
+
+// API Health Check Types
+export interface HealthCheck {
+  status: 'healthy' | 'unhealthy' | 'degraded';
+  timestamp: string;
+  version: string;
+  uptime: number;
+  services: ServiceHealth[];
+}
+
+export interface ServiceHealth {
+  name: string;
+  status: 'healthy' | 'unhealthy' | 'degraded';
+  responseTime?: number;
+  lastCheck: string;
+  details?: Record<string, any>;
+}
