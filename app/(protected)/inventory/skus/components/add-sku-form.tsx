@@ -8,10 +8,14 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import { toast } from 'sonner';
+import SkuBatchesService from '@/lib/api/sku-batches-service';
+import { SkuCreateRequest, SkuUpdateRequest } from '@/lib/api/types';
 
 interface AddSkuFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: 'add' | 'edit';
+  initialData?: Partial<SkuUpdateRequest> & { status?: number };
 }
 
 interface SkuFormData {
@@ -20,19 +24,34 @@ interface SkuFormData {
   batchNumber: string;
   quantity: number;
   shelf: string;
-  expiry: string;
-  status: 'Active' | 'Expiry Soon' | 'Expired' | 'Low Stock';
+  expiry: string; // dd/mm/yyyy
+  status: number; // 1..4
 }
 
-export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
+export function AddSkuForm({ onClose, onSuccess, mode = 'add', initialData }: AddSkuFormProps) {
+  const initialStatus = (() => {
+    const s: any = initialData?.status;
+    if (typeof s === 'number') return s || 1;
+    if (typeof s === 'string') {
+      const map: Record<string, number> = {
+        'Active': 1,
+        'Expiring Soon': 2,
+        'Out of Stock': 3,
+        'Low Stock': 4,
+      };
+      return map[s] || 1;
+    }
+    return 1;
+  })();
+
   const [formData, setFormData] = useState<SkuFormData>({
-    skuCode: '',
-    productName: '',
-    batchNumber: '',
-    quantity: 0,
-    shelf: '',
-    expiry: '',
-    status: 'Active',
+    skuCode: (initialData?.sku_code as string) || '',
+    productName: (initialData?.product_name as string) || '',
+    batchNumber: (initialData?.batch_number as string) || '',
+    quantity: (initialData?.quantity as number) || 0,
+    shelf: (initialData?.shelf as string) || '',
+    expiry: (initialData?.expiry_date as string) || '',
+    status: initialStatus,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,8 +62,6 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';
-    } else if (!/^[A-Z]{2}-\d{3}-\d{2}$/.test(formData.skuCode)) {
-      newErrors.skuCode = 'SKU Code must be in format XX-XXX-XX';
     }
 
     if (!formData.productName.trim()) {
@@ -81,28 +98,32 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Show success message
-      toast.custom(
-        (t) => (
-          <Alert
-            variant="mono"
-            icon="success"
-            close={false}
-            onClose={() => toast.dismiss(t)}
-          >
-            <RiCheckboxCircleFill />
-            <AlertDescription>
-              SKU "{formData.productName}" added successfully!
-            </AlertDescription>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
-        }
-      );
+      if (mode === 'edit' && initialData?.sku_batch_id) {
+        const payload: SkuUpdateRequest = {
+          sku_batch_id: initialData.sku_batch_id,
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          shelf: formData.shelf,
+          expiry_date: formData.expiry,
+          status: formData.status,
+        };
+        const res = await SkuBatchesService.update(payload);
+        toast.success(res.message || 'SKU batch updated successfully.');
+      } else {
+        const payload: SkuCreateRequest = {
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          shelf: formData.shelf,
+          expiry_date: formData.expiry,
+          status: formData.status,
+        };
+        const res = await SkuBatchesService.create(payload);
+        toast.success(res.message || 'SKU batch created successfully.');
+      }
 
       onSuccess?.();
       onClose();
@@ -126,12 +147,12 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
   };
 
   const isFormValid = formData.skuCode && formData.productName && formData.batchNumber && 
-                     formData.quantity > 0 && formData.shelf && formData.expiry;
+                     formData.quantity > 0 && formData.shelf && formData.expiry && formData.status;
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Add New SKU</CardTitle>
+        <CardTitle>{mode === 'edit' ? 'Edit SKU' : 'Add New SKU'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
@@ -212,7 +233,7 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
               <Label htmlFor="expiry">Expiry Date *</Label>
               <Input
                 id="expiry"
-                type="date"
+                placeholder="dd/mm/yyyy"
                 value={formData.expiry}
                 onChange={(e) => handleInputChange('expiry', e.target.value)}
                 className={errors.expiry ? 'border-destructive' : ''}
@@ -228,12 +249,12 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
                 id="status"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as SkuFormData['status'])}
+                onChange={(e) => handleInputChange('status', parseInt(e.target.value) || 1)}
               >
-                <option value="Active">Active</option>
-                <option value="Expiry Soon">Expiry Soon</option>
-                <option value="Expired">Expired</option>
-                <option value="Low Stock">Low Stock</option>
+                <option value={1}>Active</option>
+                <option value={2}>Expiring Soon</option>
+                <option value={3}>Out of Stock</option>
+                <option value={4}>Low Stock</option>
               </select>
             </div>
           </div>
@@ -252,7 +273,7 @@ export function AddSkuForm({ onClose, onSuccess }: AddSkuFormProps) {
             variant="primary"
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add SKU'}
+            {isSubmitting ? (mode === 'edit' ? 'Saving...' : 'Adding...') : (mode === 'edit' ? 'Save Changes' : 'Add SKU')}
           </Button>
         </CardFooter>
       </form>

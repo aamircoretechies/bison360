@@ -299,6 +299,98 @@ export interface ProfileDeleteErrorResponse {
   status: number;
 }
 
+// SKU Batches API Types
+export interface SkuBatchItem {
+  sku_batch_id: number;
+  sku_code: string;
+  product_name: string;
+  batch_number: string;
+  quantity: number;
+  shelf: string;
+  expiry_date: string; // dd/mm/yyyy
+  status: number; // 1 Active, 2 Expiring Soon, 3 Out of Stock, 4 Low Stock
+  created: string;
+  updated: string | null;
+  deleted: number;
+}
+
+export interface SkuBatchesRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  status?: number; // optional filter
+  sort_by?: 'latest' | 'oldest';
+}
+
+export interface SkuBatchesData {
+  sku_batches: {
+    content: SkuBatchItem[];
+    pageable: Pageable;
+    last: boolean;
+    totalPages: number;
+    totalElements: number;
+    first: boolean;
+    size: number;
+    number: number;
+    sort: {
+      sorted: boolean;
+      empty: boolean;
+      unsorted: boolean;
+    };
+    numberOfElements: number;
+    empty: boolean;
+  };
+  status_counts: Record<string, number>;
+}
+
+export interface SkuBatchesResponse {
+  data: SkuBatchesData;
+  message: string;
+  status: number;
+}
+
+export interface SkuCreateRequest {
+  product_name: string;
+  batch_number: string;
+  quantity: number;
+  shelf: string;
+  expiry_date: string; // dd/mm/yyyy
+  status: number; // 1..4
+  sku_code: string;
+}
+
+export interface SkuCreateResponse {
+  data: SkuBatchItem;
+  message: string;
+  status: number;
+}
+
+export interface SkuUpdateRequest {
+  sku_batch_id: number;
+  product_name?: string;
+  batch_number?: string;
+  quantity?: number;
+  shelf?: string;
+  expiry_date?: string;
+  status?: number;
+  sku_code?: string;
+}
+
+export interface SkuUpdateResponse {
+  data: SkuBatchItem;
+  message: string;
+  status: number;
+}
+
+export interface SkuDeleteRequest {
+  sku_batch_ids: string; // comma separated ids
+}
+
+export interface SkuDeleteResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

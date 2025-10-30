@@ -98,6 +98,15 @@ export const API_MODULES = {
     STOCKS: 'stocks',
     REPORTS: 'reports',
   },
+
+  // SKU Batches
+  SKU_BATCHES: {
+    BASE: 'sku-batches',
+    GET_ALL: 'sku-batches/get-all',
+    CREATE: 'sku-batches/create',
+    UPDATE: 'sku-batches/update',
+    DELETE: 'sku-batches/delete',
+  },
   
   // Livestock Management
   LIVESTOCK: {

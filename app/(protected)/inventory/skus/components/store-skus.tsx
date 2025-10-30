@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu } from '@radix-ui/react-dropdown-menu';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import {
@@ -54,6 +54,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useSkuBatchesQuery } from '@/lib/api/hooks/use-sku-batches-query';
+import SkuBatchesService from '@/lib/api/sku-batches-service';
+import { AdjustQuantityDialog } from './index';
 
 interface IProductData {
   id: string;
@@ -63,93 +66,11 @@ interface IProductData {
   quantity: number;
   shelf: string;
   expiry: string;
-  status: 'Active' | 'Expiry Soon' | 'Expired' | 'Low Stock';
+  status: 'Active' | 'Expiring Soon' | 'Out of Stock' | 'Low Stock';
 }
 
-const data: IProductData[] = [
-  {
-    id: '1',
-    skuCode: 'MT-001-23',
-    productName: 'Ground Bison',
-    batchNumber: 'B-10011',
-    quantity: 20,
-    shelf: 'A1-S2',
-    expiry: '15 Aug',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    skuCode: 'MT-002-23',
-    productName: 'Ribeye',
-    batchNumber: 'B-10026',
-    quantity: 0,
-    shelf: 'A2-S1',
-    expiry: '10 Aug',
-    status: 'Expiry Soon',
-  },
-  {
-    id: '3',
-    skuCode: 'MT-003-23',
-    productName: 'Chicken Breast',
-    batchNumber: 'B-10035',
-    quantity: 45,
-    shelf: 'B1-S3',
-    expiry: '18 Aug',
-    status: 'Active',
-  },
-  {
-    id: '4',
-    skuCode: 'MT-004-23',
-    productName: 'Salmon Fillet',
-    batchNumber: 'B-10042',
-    quantity: 12,
-    shelf: 'C2-S1',
-    expiry: '12 Aug',
-    status: 'Expiry Soon',
-  },
-  {
-    id: '5',
-    skuCode: 'MT-005-23',
-    productName: 'Pork Chops',
-    batchNumber: 'B-10058',
-    quantity: 5,
-    shelf: 'A3-S2',
-    expiry: '20 Aug',
-    status: 'Low Stock',
-  },
-  {
-    id: '6',
-    skuCode: 'MT-006-23',
-    productName: 'Turkey Breast',
-    batchNumber: 'B-10063',
-    quantity: 30,
-    shelf: 'B2-S4',
-    expiry: '25 Aug',
-    status: 'Active',
-  },
-  {
-    id: '7',
-    skuCode: 'MT-007-23',
-    productName: 'Lamb Chops',
-    batchNumber: 'B-10071',
-    quantity: 0,
-    shelf: 'C1-S3',
-    expiry: '08 Aug',
-    status: 'Expired',
-  },
-  {
-    id: '8',
-    skuCode: 'MT-008-23',
-    productName: 'Duck Breast',
-    batchNumber: 'B-10089',
-    quantity: 18,
-    shelf: 'A1-S4',
-    expiry: '22 Aug',
-    status: 'Active',
-  },
-];
 
-function ActionsCell({ row }: { row: Row<IProductData> }) {
+function ActionsCell({ row, onEdit, onAdjustQty, onDelete }: { row: Row<IProductData>; onEdit: (row: IProductData) => void; onAdjustQty: (row: IProductData) => void; onDelete: (row: IProductData) => void; }) {
   const { copyToClipboard } = useCopyToClipboard();
   const handleCopySKU = () => {
     copyToClipboard(String(row.original.skuCode));
@@ -182,11 +103,11 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem onClick={() => {}}>Edit Product</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {}}>Adjust Quantity</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopySKU}>Copy SKU</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(row.original)}>Edit Product</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onAdjustQty(row.original)}>Adjust Quantity</DropdownMenuItem>
+        {/* <DropdownMenuItem onClick={handleCopySKU}>Copy SKU</DropdownMenuItem> */}
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => {}}>
+        <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -195,6 +116,7 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
 }
 
 const StoreProductsSkus = () => {
+  const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 5,
@@ -207,57 +129,56 @@ const StoreProductsSkus = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<string>('latest');
 
-  const filteredData = useMemo(() => {
-    let filtered = data;
+  const selectedStatusNumber = useMemo(() => {
+    const map: Record<string, number> = {
+      'Active': 1,
+      'Expiring Soon': 2,
+      'Out of Stock': 3,
+      'Low Stock': 4,
+    };
+    return selectedStatuses[0] ? map[selectedStatuses[0]] : undefined;
+  }, [selectedStatuses]);
 
-    // Filter by status
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedStatuses.includes(item.status),
-      );
-    }
+  const { data: apiData } = useSkuBatchesQuery({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    search: searchQuery || undefined,
+    status: selectedStatusNumber,
+    sort_by: sortOrder === 'oldest' ? 'oldest' : 'latest',
+  });
 
-    // Filter by search query (case-insensitive)
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.skuCode.toLowerCase().includes(searchLower) ||
-          item.productName.toLowerCase().includes(searchLower) ||
-          item.batchNumber.toLowerCase().includes(searchLower) ||
-          item.shelf.toLowerCase().includes(searchLower) ||
-          item.status.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Apply sorting based on sortOrder
-    if (sortOrder === 'latest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(b.id).getTime() - new Date(a.id).getTime(),
-      );
-    } else if (sortOrder === 'older') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    } else if (sortOrder === 'oldest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, selectedStatuses, sortOrder]);
+  const rows = useMemo<IProductData[]>(() => {
+    const content = apiData?.data?.sku_batches?.content ?? [];
+    const mapStatus = (s: number): IProductData['status'] => {
+      switch (s) {
+        case 1: return 'Active';
+        case 2: return 'Expiring Soon';
+        case 3: return 'Out of Stock';
+        case 4: return 'Low Stock';
+        default: return 'Active';
+      }
+    };
+    return content.map((item) => ({
+      id: String(item.sku_batch_id),
+      skuCode: item.sku_code,
+      productName: item.product_name,
+      batchNumber: item.batch_number,
+      quantity: item.quantity,
+      shelf: item.shelf,
+      expiry: item.expiry_date,
+      status: mapStatus(item.status),
+    }));
+  }, [apiData]);
 
   const statusCounts = useMemo(() => {
-    return data.reduce(
-      (acc, item) => {
-        const status = item.status;
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-  }, []);
+    const counts = apiData?.data?.status_counts || {};
+    return {
+      Active: counts['1'] || 0,
+      'Expiring Soon': counts['2'] || 0,
+      'Out of Stock': counts['3'] || 0,
+      'Low Stock': counts['4'] || 0,
+    } as Record<string, number>;
+  }, [apiData]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
     setSelectedStatuses((prev = []) =>
@@ -269,9 +190,9 @@ const StoreProductsSkus = () => {
     switch (status) {
       case 'Active':
         return 'success';
-      case 'Expiry Soon':
+      case 'Expiring Soon':
         return 'warning';
-      case 'Expired':
+      case 'Out of Stock':
         return 'destructive';
       case 'Low Stock':
         return 'info';
@@ -423,10 +344,34 @@ const StoreProductsSkus = () => {
         cell: ({ row }) => {
           return (
             <div className="flex items-center gap-2">
-              <Button mode="link" underlined="dashed" size="sm">
+              <Button
+                mode="link"
+                underlined="dashed"
+                size="sm"
+                onClick={() => {
+                  const r = row.original;
+                  const statusToNumber: Record<IProductData['status'], number> = {
+                    'Active': 1,
+                    'Expiring Soon': 2,
+                    'Out of Stock': 3,
+                    'Low Stock': 4,
+                  };
+                  const payload = {
+                    sku_batch_id: parseInt(r.id),
+                    sku_code: r.skuCode,
+                    product_name: r.productName,
+                    batch_number: r.batchNumber,
+                    quantity: r.quantity,
+                    shelf: r.shelf,
+                    expiry_date: r.expiry,
+                    status: statusToNumber[r.status],
+                  };
+                  const q = encodeURIComponent(JSON.stringify(payload));
+                  router.push(`/inventory/skus/add?mode=edit&data=${q}`);
+                }}
+              >
                 Edit
               </Button>
-              
             </div>
           );
         },
@@ -435,7 +380,44 @@ const StoreProductsSkus = () => {
       {
         id: 'menu',
         header: '',
-        cell: ({ row }) => <ActionsCell row={row} />,
+        cell: ({ row }) => (
+          <ActionsCell
+            row={row}
+            onEdit={(r) => {
+              const statusToNumber: Record<IProductData['status'], number> = {
+                'Active': 1,
+                'Expiring Soon': 2,
+                'Out of Stock': 3,
+                'Low Stock': 4,
+              };
+              const payload = {
+                sku_batch_id: parseInt(r.id),
+                sku_code: r.skuCode,
+                product_name: r.productName,
+                batch_number: r.batchNumber,
+                quantity: r.quantity,
+                shelf: r.shelf,
+                expiry_date: r.expiry,
+                status: statusToNumber[r.status],
+              };
+              const q = encodeURIComponent(JSON.stringify(payload));
+              router.push(`/inventory/skus/add?mode=edit&data=${q}`);
+            }}
+            onAdjustQty={(r) => setAdjustDialog({ open: true, id: parseInt(r.id), qty: r.quantity })}
+            onDelete={async (r) => {
+              if (!confirm('Are you sure you want to delete this SKU batch?')) return;
+              try {
+                const res = await SkuBatchesService.delete({ sku_batch_ids: r.id });
+                toast.success(res.message || 'Deleted');
+                // force refetch of listing
+                // We avoid importing queryClient here to keep component lean; simplest reload
+                window.location.reload();
+              } catch (e: any) {
+                toast.error(e?.message || 'Delete failed');
+              }
+            }}
+          />
+        ),
         enableSorting: false,
         size: 60,
         meta: {
@@ -448,8 +430,8 @@ const StoreProductsSkus = () => {
 
   const table = useReactTable({
     columns,
-    data: filteredData,
-    pageCount: Math.ceil((filteredData?.length || 0) / pagination.pageSize),
+    data: rows,
+    pageCount: apiData?.data?.sku_batches?.totalPages || 1,
     getRowId: (row: IProductData) => String(row.id),
     state: {
       pagination,
@@ -486,10 +468,12 @@ const StoreProductsSkus = () => {
     );
   };
 
+  const [adjustDialog, setAdjustDialog] = useState<{ open: boolean; id: number | null; qty?: number }>({ open: false, id: null });
+
   return (
     <DataGrid
       table={table}
-      recordCount={filteredData?.length || 0}
+      recordCount={rows?.length || 0}
       tableLayout={{
         columnsPinnable: true,
         columnsMovable: true,
@@ -617,6 +601,12 @@ const StoreProductsSkus = () => {
         <CardFooter>
           <DataGridPagination />
         </CardFooter>
+        <AdjustQuantityDialog
+          open={adjustDialog.open}
+          onOpenChange={(o) => setAdjustDialog((prev) => ({ ...prev, open: o }))}
+          skuBatchId={adjustDialog.id}
+          currentQuantity={adjustDialog.qty}
+        />
       </Card>
     </DataGrid>
   );
