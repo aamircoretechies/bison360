@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu } from '@radix-ui/react-dropdown-menu';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import {
@@ -54,6 +54,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useStockLevelQuery } from '@/lib/api/hooks/use-stock-level-query';
+import StockLevelService from '@/lib/api/stock-level-service';
+import { AdjustStockQuantityDialog, UpdateStockStatusDialog } from './index';
 
 interface IProductData {
   id: string;
@@ -66,40 +69,9 @@ interface IProductData {
   status: 'Active' | 'Expiring Soon' | 'Out of Stock' | 'Low Stock';
 }
 
-const data: IProductData[] = [
-  {
-    id: '1',
-    skuCode: 'MT-001-23',
-    productName: 'Ground Bison',
-    batchNumber: 'B-1001',
-    quantity: 120,
-    location: 'Freezer A1',
-    expiry: '15 Aug 2025',
-    status: 'Active',
-  },
-  {
-    id: '2',
-    skuCode: 'MT-002-23',
-    productName: 'Ribeye Steak',
-    batchNumber: 'B-1002',
-    quantity: 20,
-    location: 'Freezer A2',
-    expiry: '10 Aug 2025',
-    status: 'Expiring Soon',
-  },
-  {
-    id: '3',
-    skuCode: 'MT-003-23',
-    productName: 'Bison Roast',
-    batchNumber: 'B-1003',
-    quantity: 0,
-    location: 'Shelf B3',
-    expiry: '01 Aug 2025',
-    status: 'Out of Stock',
-  },
-];
+ 
 
-function ActionsCell({ row }: { row: Row<IProductData> }) {
+function ActionsCell({ row, onEdit, onAdjustQty, onUpdateStatus, onDelete }: { row: Row<IProductData>; onEdit: (row: IProductData) => void; onAdjustQty: (row: IProductData) => void; onUpdateStatus: (row: IProductData) => void; onDelete: (row: IProductData) => void; }) {
   const { copyToClipboard } = useCopyToClipboard();
   const handleCopySKU = () => {
     copyToClipboard(String(row.original.skuCode));
@@ -124,27 +96,7 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
     );
   };
 
-  const handlePrintBarcode = () => {
-    const message = `Barcode printed for: ${row.original.productName}`;
-    toast.custom(
-      (t) => (
-        <Alert
-          variant="mono"
-          icon="success"
-          close={false}
-          onClose={() => toast.dismiss(t)}
-        >
-          <AlertIcon>
-            <RiCheckboxCircleFill />
-          </AlertIcon>
-          <AlertTitle>{message}</AlertTitle>
-        </Alert>
-      ),
-      {
-        position: 'top-center',
-      },
-    );
-  };
+  const handlePrintBarcode = () => {};
 
   return (
     <DropdownMenu>
@@ -154,12 +106,11 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem onClick={() => {}}>Edit Product</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {}}>Adjust Quantity</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopySKU}>Copy SKU</DropdownMenuItem>
-        <DropdownMenuItem onClick={handlePrintBarcode}>Print Barcode</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(row.original)}>Edit Product</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onAdjustQty(row.original)}>Adjust Quantity</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onUpdateStatus(row.original)}>Update Status</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => {}}>
+        <DropdownMenuItem variant="destructive" onClick={() => onDelete(row.original)}>
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -168,6 +119,7 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
 }
 
 const StoreProductsStocks = () => {
+  const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 5,
@@ -180,57 +132,56 @@ const StoreProductsStocks = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<string>('latest');
 
-  const filteredData = useMemo(() => {
-    let filtered = data;
+  const selectedStatusNumber = useMemo(() => {
+    const map: Record<string, number> = {
+      'Active': 1,
+      'Expiring Soon': 2,
+      'Out of Stock': 3,
+      'Low Stock': 4,
+    };
+    return selectedStatuses[0] ? map[selectedStatuses[0]] : undefined;
+  }, [selectedStatuses]);
 
-    // Filter by status
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedStatuses.includes(item.status),
-      );
-    }
+  const { data: apiData } = useStockLevelQuery({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    search: searchQuery || undefined,
+    status: selectedStatusNumber,
+    sort_by: sortOrder === 'oldest' ? 'oldest' : 'latest',
+  });
 
-    // Filter by search query (case-insensitive)
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.skuCode.toLowerCase().includes(searchLower) ||
-          item.productName.toLowerCase().includes(searchLower) ||
-          item.batchNumber.toLowerCase().includes(searchLower) ||
-          item.location.toLowerCase().includes(searchLower) ||
-          item.status.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Apply sorting based on sortOrder
-    if (sortOrder === 'latest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(b.id).getTime() - new Date(a.id).getTime(),
-      );
-    } else if (sortOrder === 'older') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    } else if (sortOrder === 'oldest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, selectedStatuses, sortOrder]);
+  const rows = useMemo<IProductData[]>(() => {
+    const content = apiData?.data?.stock_levels?.content ?? [];
+    const mapStatus = (s: number): IProductData['status'] => {
+      switch (s) {
+        case 1: return 'Active';
+        case 2: return 'Expiring Soon';
+        case 3: return 'Out of Stock';
+        case 4: return 'Low Stock';
+        default: return 'Active';
+      }
+    };
+    return content.map((item) => ({
+      id: String(item.stock_level_id),
+      skuCode: item.sku_code,
+      productName: item.product_name,
+      batchNumber: item.batch_number,
+      quantity: item.quantity,
+      location: item.location,
+      expiry: item.expiry_date,
+      status: mapStatus(item.status),
+    }));
+  }, [apiData]);
 
   const statusCounts = useMemo(() => {
-    return data.reduce(
-      (acc, item) => {
-        const status = item.status;
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-  }, []);
+    const counts = apiData?.data?.status_counts || {};
+    return {
+      Active: counts['1'] || 0,
+      'Expiring Soon': counts['2'] || 0,
+      'Out of Stock': counts['3'] || 0,
+      'Low Stock': counts['4'] || 0,
+    } as Record<string, number>;
+  }, [apiData]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
     setSelectedStatuses((prev = []) =>
@@ -414,7 +365,22 @@ const StoreProductsStocks = () => {
         cell: ({ row }) => {
           return (
             <div className="flex items-center gap-2">
-              <Button mode="link" underlined="dashed" size="sm">
+              <Button mode="link" underlined="dashed" size="sm" onClick={() => {
+                const r = row.original;
+                const map: Record<IProductData['status'], number> = { 'Active': 1, 'Expiring Soon': 2, 'Out of Stock': 3, 'Low Stock': 4 };
+                const payload = {
+                  stock_level_id: parseInt(r.id),
+                  sku_code: r.skuCode,
+                  product_name: r.productName,
+                  batch_number: r.batchNumber,
+                  quantity: r.quantity,
+                  location: r.location,
+                  expiry_date: r.expiry,
+                  status: map[r.status],
+                };
+                const q = encodeURIComponent(JSON.stringify(payload));
+                router.push(`/inventory/stocks/add?mode=edit&data=${q}`);
+              }}>
                 Edit
               </Button>
             </div>
@@ -425,7 +391,39 @@ const StoreProductsStocks = () => {
       {
         id: 'menu',
         header: '',
-        cell: ({ row }) => <ActionsCell row={row} />,
+        cell: ({ row }) => (
+          <ActionsCell
+            row={row}
+            onEdit={(r) => {
+              const map: Record<IProductData['status'], number> = { 'Active': 1, 'Expiring Soon': 2, 'Out of Stock': 3, 'Low Stock': 4 };
+              const payload = {
+                stock_level_id: parseInt(r.id),
+                sku_code: r.skuCode,
+                product_name: r.productName,
+                batch_number: r.batchNumber,
+                quantity: r.quantity,
+                location: r.location,
+                expiry_date: r.expiry,
+                status: map[r.status],
+              };
+              const q = encodeURIComponent(JSON.stringify(payload));
+              router.push(`/inventory/stocks/add?mode=edit&data=${q}`);
+            }}
+            onAdjustQty={(r) => setAdjustDialog({ open: true, id: parseInt(r.id), qty: r.quantity })}
+            onUpdateStatus={(r) => setStatusDialog({ open: true, id: parseInt(r.id), status: { 'Active':1,'Expiring Soon':2,'Out of Stock':3,'Low Stock':4 }[r.status] })}
+            onDelete={async (r) => {
+              if (!confirm('Are you sure you want to delete this stock?')) return;
+              try {
+                const res = await StockLevelService.delete({ stock_level_ids: r.id });
+                toast.success(res.message || 'Deleted');
+                // soft refresh data
+                window.location.reload();
+              } catch (e: any) {
+                toast.error(e?.message || 'Delete failed');
+              }
+            }}
+          />
+        ),
         enableSorting: false,
         size: 60,
         meta: {
@@ -438,8 +436,8 @@ const StoreProductsStocks = () => {
 
   const table = useReactTable({
     columns,
-    data: filteredData,
-    pageCount: Math.ceil((filteredData?.length || 0) / pagination.pageSize),
+    data: rows,
+    pageCount: apiData?.data?.stock_levels?.totalPages || 1,
     getRowId: (row: IProductData) => String(row.id),
     state: {
       pagination,
@@ -475,10 +473,13 @@ const StoreProductsStocks = () => {
     );
   };
 
+  const [adjustDialog, setAdjustDialog] = useState<{ open: boolean; id: number | null; qty?: number }>({ open: false, id: null });
+  const [statusDialog, setStatusDialog] = useState<{ open: boolean; id: number | null; status?: number }>({ open: false, id: null });
+
   return (
     <DataGrid
       table={table}
-      recordCount={filteredData?.length || 0}
+      recordCount={rows?.length || 0}
       tableLayout={{
         columnsPinnable: true,
         columnsMovable: true,
@@ -606,6 +607,18 @@ const StoreProductsStocks = () => {
         <CardFooter>
           <DataGridPagination />
         </CardFooter>
+        <AdjustStockQuantityDialog
+          open={adjustDialog.open}
+          onOpenChange={(o) => setAdjustDialog((prev) => ({ ...prev, open: o }))}
+          stockLevelId={adjustDialog.id}
+          currentQuantity={adjustDialog.qty}
+        />
+        <UpdateStockStatusDialog
+          open={statusDialog.open}
+          onOpenChange={(o) => setStatusDialog((prev) => ({ ...prev, open: o }))}
+          stockLevelId={statusDialog.id}
+          currentStatus={statusDialog.status}
+        />
       </Card>
     </DataGrid>
   );

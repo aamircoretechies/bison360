@@ -391,6 +391,94 @@ export interface SkuDeleteResponse {
   status: number;
 }
 
+// Stock Level API Types
+export interface StockLevelItem {
+  stock_level_id: number;
+  sku_code: string;
+  product_name: string;
+  batch_number: string;
+  quantity: number;
+  location: string;
+  expiry_date: string; // dd/mm/yyyy
+  status: number; // 1 Active, 2 Expiring Soon, 3 Out of Stock, 4 Low Stock
+  created: string;
+  updated: string | null;
+  deleted: number;
+}
+
+export interface StockLevelRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  status?: number;
+  sort_by?: 'latest' | 'oldest';
+}
+
+export interface StockLevelData {
+  stock_levels: {
+    content: StockLevelItem[];
+    pageable: Pageable;
+    last: boolean;
+    totalPages: number;
+    totalElements: number;
+    first: boolean;
+    size: number;
+    number: number;
+    sort: { sorted: boolean; empty: boolean; unsorted: boolean };
+    numberOfElements: number;
+    empty: boolean;
+  };
+  status_counts: Record<string, number>;
+}
+
+export interface StockLevelResponse {
+  data: StockLevelData;
+  message: string;
+  status: number;
+}
+
+export interface StockCreateRequest {
+  sku_code: string;
+  product_name: string;
+  batch_number: string;
+  quantity: number;
+  location: string;
+  expiry_date: string;
+  status: number;
+}
+
+export interface StockCreateResponse {
+  data: StockLevelItem;
+  message: string;
+  status: number;
+}
+
+export interface StockUpdateRequest {
+  stock_level_id: number;
+  sku_code?: string;
+  product_name?: string;
+  batch_number?: string;
+  quantity?: number;
+  location?: string;
+  expiry_date?: string;
+  status?: number;
+}
+
+export interface StockUpdateResponse {
+  data: StockLevelItem;
+  message: string;
+  status: number;
+}
+
+export interface StockDeleteRequest {
+  stock_level_ids: string; // comma-separated ids
+}
+
+export interface StockDeleteResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

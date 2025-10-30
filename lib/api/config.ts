@@ -107,6 +107,15 @@ export const API_MODULES = {
     UPDATE: 'sku-batches/update',
     DELETE: 'sku-batches/delete',
   },
+
+  // Stock Level
+  STOCK_LEVEL: {
+    BASE: 'stock-level',
+    GET_ALL: 'stock-level/get-all',
+    CREATE: 'stock-level/create',
+    UPDATE: 'stock-level/update',
+    DELETE: 'stock-level/delete',
+  },
   
   // Livestock Management
   LIVESTOCK: {

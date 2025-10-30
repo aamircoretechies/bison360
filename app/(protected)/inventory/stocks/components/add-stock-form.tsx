@@ -8,10 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import { toast } from 'sonner';
+import StockLevelService from '@/lib/api/stock-level-service';
+import { StockCreateRequest, StockUpdateRequest } from '@/lib/api/types';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AddStockFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: 'add' | 'edit';
+  initialData?: Partial<StockUpdateRequest> & { status?: number };
 }
 
 interface StockFormData {
@@ -21,18 +26,34 @@ interface StockFormData {
   quantity: number;
   location: string;
   expiry: string;
-  status: 'Active' | 'Expiring Soon' | 'Out of Stock' | 'Low Stock';
+  status: number; // 1..4
 }
 
-export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
+export function AddStockForm({ onClose, onSuccess, mode = 'add', initialData }: AddStockFormProps) {
+  const queryClient = useQueryClient();
+  const initStatus = (() => {
+    const s: any = initialData?.status;
+    if (typeof s === 'number') return s || 1;
+    if (typeof s === 'string') {
+      const map: Record<string, number> = {
+        'Active': 1,
+        'Expiring Soon': 2,
+        'Out of Stock': 3,
+        'Low Stock': 4,
+      };
+      return map[s] || 1;
+    }
+    return 1;
+  })();
+
   const [formData, setFormData] = useState<StockFormData>({
-    skuCode: '',
-    productName: '',
-    batchNumber: '',
-    quantity: 0,
-    location: '',
-    expiry: '',
-    status: 'Active',
+    skuCode: (initialData?.sku_code as string) || '',
+    productName: (initialData?.product_name as string) || '',
+    batchNumber: (initialData?.batch_number as string) || '',
+    quantity: (initialData?.quantity as number) || 0,
+    location: (initialData?.location as string) || '',
+    expiry: (initialData?.expiry_date as string) || '',
+    status: initStatus,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,8 +64,6 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';
-    } else if (!/^[A-Z]{2}-\d{3}-\d{2}$/.test(formData.skuCode)) {
-      newErrors.skuCode = 'SKU Code must be in format XX-XXX-XX';
     }
 
     if (!formData.productName.trim()) {
@@ -81,28 +100,42 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Show success message
-      toast.custom(
-        (t) => (
-          <Alert
-            variant="mono"
-            icon="success"
-            close={false}
-            onClose={() => toast.dismiss(t)}
-          >
-            <RiCheckboxCircleFill />
-            <AlertDescription>
-              Stock "{formData.productName}" added successfully!
-            </AlertDescription>
-          </Alert>
-        ),
-        {
-          position: 'top-center',
+      if (mode === 'edit' && initialData?.stock_level_id) {
+        const payload: StockUpdateRequest = {
+          stock_level_id: initialData.stock_level_id,
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          location: formData.location,
+          expiry_date: formData.expiry,
+          status: formData.status,
+        };
+        const res = await StockLevelService.update(payload);
+        if (res.status === 0) {
+          alert(res.message || 'Update failed.');
+          return;
         }
-      );
+        toast.success(res.message || 'Stock updated successfully.');
+        queryClient.invalidateQueries({ queryKey: ['stock-level'] });
+      } else {
+        const payload: StockCreateRequest = {
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          location: formData.location,
+          expiry_date: formData.expiry,
+          status: formData.status,
+        };
+        const res = await StockLevelService.create(payload);
+        if (res.status === 0) {
+          alert(res.message || 'Creation failed.');
+          return;
+        }
+        toast.success(res.message || 'Stock created successfully.');
+        queryClient.invalidateQueries({ queryKey: ['stock-level'] });
+      }
 
       onSuccess?.();
       onClose();
@@ -131,7 +164,7 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Add New Stock</CardTitle>
+        <CardTitle>{mode === 'edit' ? 'Edit Stock' : 'Add New Stock'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
@@ -212,7 +245,7 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
               <Label htmlFor="expiry">Expiry Date *</Label>
               <Input
                 id="expiry"
-                type="date"
+                placeholder="dd/mm/yyyy"
                 value={formData.expiry}
                 onChange={(e) => handleInputChange('expiry', e.target.value)}
                 className={errors.expiry ? 'border-destructive' : ''}
@@ -228,12 +261,12 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
                 id="status"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as StockFormData['status'])}
+                onChange={(e) => handleInputChange('status', parseInt(e.target.value) || 1)}
               >
-                <option value="Active">Active</option>
-                <option value="Expiring Soon">Expiring Soon</option>
-                <option value="Out of Stock">Out of Stock</option>
-                <option value="Low Stock">Low Stock</option>
+                <option value={1}>Active</option>
+                <option value={2}>Expiring Soon</option>
+                <option value={3}>Out of Stock</option>
+                <option value={4}>Low Stock</option>
               </select>
             </div>
           </div>
@@ -252,7 +285,7 @@ export function AddStockForm({ onClose, onSuccess }: AddStockFormProps) {
             variant="primary"
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Stock'}
+            {isSubmitting ? (mode === 'edit' ? 'Saving...' : 'Adding...') : (mode === 'edit' ? 'Save Changes' : 'Add Stock')}
           </Button>
         </CardFooter>
       </form>
