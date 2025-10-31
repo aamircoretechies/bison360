@@ -681,6 +681,101 @@ export interface PermissionDeleteResponse {
   status: number;
 }
 
+// Roles API Types
+export interface RolePermissionItem {
+  permissions_id: number;
+  permission_name: string;
+  permission_code: number;
+  permission_slug: string;
+  permission_description: string;
+  created: string;
+  updated: string | null;
+  status: number;
+  deleted: number;
+  user_role: number;
+}
+
+export interface RoleItem {
+  role_id: number;
+  role_name: string;
+  role_slug: string;
+  role_description: string;
+  role_permissions_id: string; // comma-separated permission IDs
+  permissions: RolePermissionItem[];
+  created: string;
+  updated: string | null;
+  status: number;
+  deleted: number;
+}
+
+export interface RolesRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  user_role?: number;
+  sort_by?: 'latest' | 'oldest';
+}
+
+export interface RolesData {
+  content: RoleItem[];
+  pageable: Pageable;
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface RolesResponse {
+  data: RolesData;
+  message: string;
+  status: number;
+}
+
+export interface RoleCreateRequest {
+  role_name: string;
+  role_slug: string;
+  role_description: string;
+  role_permissions_id: string; // comma-separated permission IDs
+}
+
+export interface RoleCreateResponse {
+  data: RoleItem;
+  message: string;
+  status: number;
+}
+
+export interface RoleUpdateRequest {
+  role_id: number;
+  role_name?: string;
+  role_slug?: string;
+  role_description?: string;
+  role_permissions_id?: string; // comma-separated permission IDs
+}
+
+export interface RoleUpdateResponse {
+  data: RoleItem;
+  message: string;
+  status: number;
+}
+
+export interface RoleDeleteRequest {
+  role_ids: string; // comma separated ids
+}
+
+export interface RoleDeleteResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

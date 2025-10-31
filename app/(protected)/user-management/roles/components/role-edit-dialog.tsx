@@ -7,7 +7,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
   Alert,
@@ -50,8 +49,9 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LoaderCircleIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { UserPermission, UserRole } from '@/app/models/user';
-import { usePermissionSelectQuery } from '../../permissions/hooks/use-permission-select-query';
+import { RoleItem, PermissionItem } from '@/lib/api/types';
+import { usePermissionsQuery } from '@/lib/api/hooks/use-permissions-query';
+import RolesService from '@/lib/api/roles-service';
 import { RoleSchema, RoleSchemaType } from '../forms/role-schema';
 
 const RoleEditDialog = ({
@@ -61,11 +61,14 @@ const RoleEditDialog = ({
 }: {
   open: boolean;
   closeDialog: () => void;
-  role: UserRole | null;
+  role: RoleItem | null;
 }) => {
   const queryClient = useQueryClient();
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
-  const { data: permissionList } = usePermissionSelectQuery();
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  
+  // Fetch all permissions for the permission selector
+  const { data: permissionsData } = usePermissionsQuery({});
+  const permissionList = permissionsData?.data?.content || [];
 
   const form = useForm<RoleSchemaType>({
     resolver: zodResolver(RoleSchema),
@@ -80,49 +83,61 @@ const RoleEditDialog = ({
 
   useEffect(() => {
     if (open) {
-      const permissionIds: string[] = role?.permissions?.map((p) => p.id) ?? [];
+      // Extract permission IDs from role permissions array
+      const permissionIds: number[] = role?.permissions?.map((p) => p.permissions_id) ?? [];
 
       form.reset({
-        name: role?.name || '',
-        slug: role?.slug || '',
-        description: role?.description ?? '',
-        permissions: permissionIds,
+        name: role?.role_name || '',
+        slug: role?.role_slug || '',
+        description: role?.role_description ?? '',
+        permissions: permissionIds.map(String),
       });
       setSelectedPermissions(permissionIds);
     }
   }, [form, open, role]);
 
   useEffect(() => {
-    form.setValue('permissions', selectedPermissions, { shouldDirty: true });
+    form.setValue('permissions', selectedPermissions.map(String), { shouldDirty: true });
     form.trigger('permissions');
   }, [form, selectedPermissions]);
 
   const mutation = useMutation({
     mutationFn: async (values: RoleSchemaType) => {
-      const isEdit = !!role?.id;
-      const url = isEdit
-        ? `/api/user-management/roles/${role.id}`
-        : '/api/user-management/roles';
-      const method = isEdit ? 'PUT' : 'POST';
+      const isEdit = !!role?.role_id;
+      const rolePermissionsId = selectedPermissions.join(',');
 
-      const response = await apiFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
+      if (isEdit) {
+        const payload = {
+          role_id: role.role_id,
+          role_name: values.name,
+          role_slug: values.slug,
+          role_description: values.description || '',
+          role_permissions_id: rolePermissionsId,
+        };
+        const response = await RolesService.update(payload);
+        if (response.status === 0) {
+          throw new Error(response.message || 'Failed to update role');
+        }
+        return response;
+      } else {
+        const payload = {
+          role_name: values.name,
+          role_slug: values.slug,
+          role_description: values.description || '',
+          role_permissions_id: rolePermissionsId,
+        };
+        const response = await RolesService.create(payload);
+        if (response.status === 0) {
+          throw new Error(response.message || 'Failed to create role');
+        }
+        return response;
       }
-
-      return response.json();
     },
-    onSuccess: () => {
-      const isEdit = !!role?.id;
+    onSuccess: (response) => {
+      const isEdit = !!role?.role_id;
       const message = isEdit
-        ? 'Role updated successfully'
-        : 'Role added successfully';
+        ? (response.message || 'Role updated successfully')
+        : (response.message || 'Role added successfully');
 
       toast.custom(
         () => (
@@ -139,7 +154,7 @@ const RoleEditDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-roles'] });
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
       closeDialog();
     },
     onError: (error: Error) => {
@@ -163,14 +178,10 @@ const RoleEditDialog = ({
   const isProcessing = mutation.status === 'pending';
 
   const handleSubmit = (values: RoleSchemaType) => {
-    const payload = {
-      ...values,
-      permissions: selectedPermissions || [],
-    };
-    mutation.mutate(payload);
+    mutation.mutate(values);
   };
 
-  const togglePermissionSelection = (permissionId: string) => {
+  const togglePermissionSelection = (permissionId: number) => {
     setSelectedPermissions((prev) =>
       prev.includes(permissionId)
         ? prev.filter((id) => id !== permissionId)
@@ -247,11 +258,11 @@ const RoleEditDialog = ({
                     {selectedPermissions.length > 0 ? (
                       selectedPermissions.map((permissionId) => {
                         const permission = permissionList?.find(
-                          (p: UserPermission) => p.id === permissionId,
+                          (p: PermissionItem) => p.permissions_id === permissionId,
                         );
                         return (
                           <Badge key={permissionId} variant="secondary">
-                            {permission?.slug}
+                            {permission?.permission_slug}
                             <BadgeButton
                               onClick={() =>
                                 togglePermissionSelection(permissionId)
@@ -288,22 +299,22 @@ const RoleEditDialog = ({
                               <CommandGroup>
                                 <ScrollArea className="h-[200px]">
                                   {permissionList?.map(
-                                    (permission: UserPermission) => (
+                                    (permission: PermissionItem) => (
                                       <CommandItem
-                                        key={permission.id}
+                                        key={permission.permissions_id}
                                         onSelect={() =>
                                           togglePermissionSelection(
-                                            permission.id,
+                                            permission.permissions_id,
                                           )
                                         }
                                       >
                                         <span className="grow">
-                                          {permission.slug}
+                                          {permission.permission_slug}
                                         </span>
                                         <CommandCheck
                                           className={cn(
                                             selectedPermissions.includes(
-                                              permission.id,
+                                              permission.permissions_id,
                                             )
                                               ? 'opacity-100'
                                               : 'opacity-0',

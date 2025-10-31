@@ -3,7 +3,6 @@
 import { RiCheckboxCircleFill, RiErrorWarningFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LoaderCircleIcon } from 'lucide-react';
-import { UserRole } from '@/app/models/user';
+import { RoleItem } from '@/lib/api/types';
+import RolesService from '@/lib/api/roles-service';
 
 const RoleDeleteDialog = ({
   open,
@@ -24,26 +24,25 @@ const RoleDeleteDialog = ({
 }: {
   open: boolean;
   closeDialog: () => void;
-  role: UserRole;
+  role: RoleItem;
 }) => {
   const queryClient = useQueryClient();
 
   // Define the mutation for deleting the role
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await apiFetch(`/api/user-management/roles/${role.id}`, {
-        method: 'DELETE',
+      const response = await RolesService.delete({
+        role_ids: String(role.role_id),
       });
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
+      if (response.status === 0) {
+        throw new Error(response.message || 'Failed to delete role');
       }
 
-      return response.json();
+      return response;
     },
-    onSuccess: () => {
-      const message = 'Role deleted successfully';
+    onSuccess: (response) => {
+      const message = response.message || 'Role deleted successfully';
 
       toast.custom(
         () => (
@@ -60,7 +59,7 @@ const RoleDeleteDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-roles'] }); // Refetch roles list
+      queryClient.invalidateQueries({ queryKey: ['roles'] }); // Refetch roles list
       closeDialog();
     },
     onError: (error: Error) => {
@@ -88,7 +87,7 @@ const RoleDeleteDialog = ({
           <DialogTitle>Confirm Delete</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          Are you sure you want to delete the role <strong>{role.name}</strong>?
+          Are you sure you want to delete the role <strong>{role.role_name}</strong>?
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" onClick={closeDialog}>

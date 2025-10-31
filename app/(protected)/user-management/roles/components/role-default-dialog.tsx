@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LoaderCircleIcon } from 'lucide-react';
-import { UserRole } from '@/app/models/user';
+import { RoleItem } from '@/lib/api/types';
 
 const RoleDefaultDialog = ({
   open,
@@ -24,13 +24,13 @@ const RoleDefaultDialog = ({
 }: {
   open: boolean;
   closeDialog: () => void;
-  role: UserRole;
+  role: RoleItem;
 }) => {
   const queryClient = useQueryClient();
 
-  // Define the mutation for deleting the role
+  // Define the mutation for setting default role
   const mutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: number) => {
       const response = await apiFetch(
         `/api/user-management/roles/${id}/default`,
         {
@@ -62,7 +62,7 @@ const RoleDefaultDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-roles'] }); // Refetch roles list
+      queryClient.invalidateQueries({ queryKey: ['roles'] }); // Refetch roles list
       closeDialog();
     },
     onError: (error: Error) => {
@@ -87,10 +87,10 @@ const RoleDefaultDialog = ({
     <Dialog open={open} onOpenChange={closeDialog}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change the default role to {role.name} ?</DialogTitle>
+          <DialogTitle>Change the default role to {role.role_name} ?</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          New users will be assigned the {role.name} role by default.
+          New users will be assigned the {role.role_name} role by default.
         </DialogDescription>
         <DialogFooter>
           <Button variant="outline" onClick={closeDialog}>
@@ -98,7 +98,7 @@ const RoleDefaultDialog = ({
           </Button>
           <Button
             variant="destructive"
-            onClick={() => mutation.mutate(role.id)}
+            onClick={() => mutation.mutate(role.role_id)}
             disabled={mutation.status === 'pending'}
           >
             {mutation.status === 'pending' && (

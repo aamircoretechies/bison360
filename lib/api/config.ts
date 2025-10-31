@@ -73,6 +73,10 @@ export const API_MODULES = {
     BASE: 'roles',
     SELECT: 'select',
     DEFAULT: 'default',
+    GET_ALL: 'roles/get-all',
+    CREATE: 'roles/create',
+    UPDATE: 'roles/update',
+    DELETE: 'roles/delete',
   },
   
   // Permissions Management
