@@ -65,7 +65,7 @@ export const MENU_SIDEBAR: MenuConfig = [
       { title: 'Receive & Barcode', path: '/inventory/barcodes' },
       { title: 'Manage SKUs & Batches', path: '/inventory/skus' },
       { title: 'Stock Levels', path: '/inventory/stocks' },
-      { title: 'Inventory Reports', path: '#' },
+      // { title: 'Inventory Reports', path: '#' },
     ],
   },
   {
@@ -131,10 +131,10 @@ export const MENU_SIDEBAR: MenuConfig = [
         title: 'Permissions',
         path: '/user-management/permissions',
       },
-      {
-        title: 'Logs',
-        path: '/user-management/logs',
-      },
+      // {
+      //   title: 'Logs',
+      //   path: '/user-management/logs',
+      // },
      
     ],
   }, 

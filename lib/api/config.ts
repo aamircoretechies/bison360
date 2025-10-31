@@ -7,7 +7,7 @@
 export const API_CONFIG = {
   // Base URLs for different environments
   BASE_URLS: {
-    DEVELOPMENT: process.env.NEXT_PUBLIC_API_URL || 'https://jaap.live/bison-apis',
+    DEVELOPMENT: process.env.NEXT_PUBLIC_API_URL || 'https://jaap.live/bison-apis-prod',
     STAGING: process.env.NEXT_PUBLIC_API_URL_STAGING || 'https://staging-api.bison360.com',
     PRODUCTION: process.env.NEXT_PUBLIC_API_URL_PROD || 'https://api.bison360.com',
   },
