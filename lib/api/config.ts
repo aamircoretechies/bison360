@@ -80,6 +80,10 @@ export const API_MODULES = {
     BASE: 'permissions',
     SELECT: 'select',
     DELETE: 'delete',
+    GET_ALL: 'permissions/get-all',
+    CREATE: 'permissions/create',
+    UPDATE: 'permissions/update',
+    DELETE: 'permissions/delete',
   },
   
   // Settings Management

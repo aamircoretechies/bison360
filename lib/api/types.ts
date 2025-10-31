@@ -597,6 +597,90 @@ export interface BarcodeDeleteResponse {
   status: number;
 }
 
+// Permissions API Types
+export interface PermissionItem {
+  permissions_id: number;
+  permission_name: string;
+  permission_code: number;
+  permission_slug: string;
+  permission_description: string;
+  created: string;
+  updated: string | null;
+  status: number;
+  deleted: number;
+  user_role: number;
+}
+
+export interface PermissionsRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  user_role?: number;
+  sort_by?: 'latest' | 'oldest';
+}
+
+export interface PermissionsData {
+  content: PermissionItem[];
+  pageable: Pageable;
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
+}
+
+export interface PermissionsResponse {
+  data: PermissionsData;
+  message: string;
+  status: number;
+}
+
+export interface PermissionCreateRequest {
+  permission_name: string;
+  permission_code: number;
+  permission_slug: string;
+  permission_description: string;
+  user_role: number;
+}
+
+export interface PermissionCreateResponse {
+  data: PermissionItem;
+  message: string;
+  status: number;
+}
+
+export interface PermissionUpdateRequest {
+  permissions_id: number;
+  permission_name?: string;
+  permission_code?: number;
+  permission_slug?: string;
+  permission_description?: string;
+  user_role?: number;
+}
+
+export interface PermissionUpdateResponse {
+  data: PermissionItem;
+  message: string;
+  status: number;
+}
+
+export interface PermissionDeleteRequest {
+  permissions_ids: string; // comma separated ids
+}
+
+export interface PermissionDeleteResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;

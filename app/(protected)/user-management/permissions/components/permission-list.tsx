@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   ColumnDef,
   getCoreRowModel,
@@ -13,7 +12,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Ellipsis, Plus, Search, X } from 'lucide-react';
-import { apiFetch } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,11 +21,7 @@ import {
   CardTable,
   CardToolbar,
 } from '@/components/ui/card';
-import {
-  DataGrid,
-  DataGridApiFetchParams,
-  DataGridApiResponse,
-} from '@/components/ui/data-grid';
+import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import {
@@ -51,8 +45,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserPermission, UserRole } from '@/app/models/user';
-import { useRoleSelectQuery } from '../../roles/hooks/use-role-select-query';
+import { PermissionItem } from '@/lib/api/types';
+import { usePermissionsQuery } from '@/lib/api/hooks/use-permissions-query';
 import PermissionDeleteDialog from './permission-delete-dialog';
 import PermissionEditDialog from './permission-edit-dialog';
 import PermissionGroupDeleteDialog from './permission-group-delete-dialog';
@@ -72,82 +66,39 @@ const PermissionList = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupDeleteDialogOpen, setGroupDeleteDialogOpen] = useState(false);
-  const [editPermission, setEditPermission] = useState<UserPermission | null>(
+  const [editPermission, setEditPermission] = useState<PermissionItem | null>(
     null,
   );
   const [deletePermission, setDeletePermission] =
-    useState<UserPermission | null>(null);
+    useState<PermissionItem | null>(null);
   const [deletePermissionIds, setDeletePermissionIds] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRole, setSelectedRole] = useState<number | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>('latest');
 
   // Query state management
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Role select query
-  const { data: roleList } = useRoleSelectQuery();
-
-  // Fetch permissions from the server API
-  const fetchPermissions = async ({
-    pageIndex,
-    pageSize,
-    sorting,
-    searchQuery,
-  }: DataGridApiFetchParams): Promise<DataGridApiResponse<UserPermission>> => {
-    const sortField = sorting?.[0]?.id || 'createdAt';
-    const sortDirection = sorting?.[0]?.desc ? 'desc' : 'asc';
-
-    const params = new URLSearchParams({
-      page: String(pageIndex + 1),
-      limit: String(pageSize),
-      ...(sortField ? { sort: sortField, dir: sortDirection } : {}),
-      ...(searchQuery ? { query: searchQuery } : {}),
-      ...(selectedRole && selectedRole !== 'all'
-        ? { roleId: selectedRole }
-        : {}),
-    });
-
-    const response = await apiFetch(
-      `/api/user-management/permissions?${params.toString()}`,
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        'Oops! Something didn’t go as planned. Please try again in a moment',
-      );
-    }
-
-    return response.json();
-  };
-
   // Permissions query
-  const { data, isLoading } = useQuery({
-    queryKey: [
-      'user-permissions',
-      pagination,
-      sorting,
-      searchQuery,
-      selectedRole,
-    ],
-    queryFn: () =>
-      fetchPermissions({
-        pageIndex: pagination.pageIndex,
-        pageSize: pagination.pageSize,
-        sorting,
-        filters: [
-          ...(selectedRole ? [{ id: 'role', value: selectedRole }] : []),
-        ],
-        searchQuery,
-      }),
-    staleTime: Infinity,
-    gcTime: 1000 * 60 * 60, // 60 minutes
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    retry: 1,
+  const { data: apiData, isLoading } = usePermissionsQuery({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    search: searchQuery || undefined,
+    user_role: selectedRole,
+    sort_by: sortOrder,
   });
+
+  // Transform API data to table format
+  const rows = useMemo<PermissionItem[]>(() => {
+    return apiData?.data?.content ?? [];
+  }, [apiData]);
 
   // Handle row selection
   const handleRoleSelection = (roleId: string) => {
-    setSelectedRole(roleId);
+    if (roleId === 'all') {
+      setSelectedRole(undefined);
+    } else {
+      setSelectedRole(parseInt(roleId));
+    }
     setPagination({ ...pagination, pageIndex: 0 }); // Reset to first page when filtering
   };
 
@@ -161,11 +112,11 @@ const PermissionList = () => {
   }, [rowSelection]);
 
   // Column definitions
-  const columns = useMemo<ColumnDef<UserPermission>[]>(
+  const columns = useMemo<ColumnDef<PermissionItem>[]>(
     () => [
       {
-        id: 'id',
-        accessorKey: 'id',
+        id: 'permissions_id',
+        accessorKey: 'permissions_id',
         header: () => <DataGridTableRowSelectAll />,
         cell: ({ row }) => <DataGridTableRowSelect row={row} />,
         size: 27,
@@ -176,8 +127,8 @@ const PermissionList = () => {
         enableResizing: false,
       },
       {
-        id: 'name',
-        accessorKey: 'name',
+        id: 'permission_name',
+        accessorKey: 'permission_name',
         header: ({ column }) => (
           <DataGridColumnHeader title="Permission" column={column} />
         ),
@@ -191,8 +142,8 @@ const PermissionList = () => {
         },
       },
       {
-        id: 'slug',
-        accessorKey: 'slug',
+        id: 'permission_slug',
+        accessorKey: 'permission_slug',
         header: ({ column }) => (
           <DataGridColumnHeader title="Slug" column={column} />
         ),
@@ -214,15 +165,15 @@ const PermissionList = () => {
         },
       },
       {
-        id: 'description',
-        accessorKey: 'description',
+        id: 'permission_description',
+        accessorKey: 'permission_description',
         header: ({ column }) => (
           <DataGridColumnHeader title="Description" column={column} />
         ),
         cell: (info) => {
           const value = info.getValue() as string;
 
-          return <div className="truncate">{value}</div>;
+          return <div className="truncate">{value || '-'}</div>;
         },
         size: 300,
         enableSorting: false,
@@ -233,8 +184,8 @@ const PermissionList = () => {
         },
       },
       {
-        id: 'createdAt',
-        accessorKey: 'createdAt',
+        id: 'created',
+        accessorKey: 'created',
         header: ({ column }) => (
           <DataGridColumnHeader title="Created At" column={column} />
         ),
@@ -298,9 +249,9 @@ const PermissionList = () => {
 
   const table = useReactTable({
     columns,
-    data: data?.data || [],
-    pageCount: Math.ceil((data?.pagination.total || 0) / pagination.pageSize),
-    getRowId: (row: UserPermission) => row.id,
+    data: rows,
+    pageCount: apiData?.data?.totalPages || 1,
+    getRowId: (row: PermissionItem) => String(row.permissions_id),
     state: {
       pagination,
       sorting,
@@ -355,7 +306,7 @@ const PermissionList = () => {
           <Select
             disabled={isLoading && true}
             onValueChange={handleRoleSelection}
-            value={selectedRole || 'all'}
+            value={selectedRole ? String(selectedRole) : 'all'}
             defaultValue="all"
           >
             <SelectTrigger className="w-full sm:w-36">
@@ -363,11 +314,15 @@ const PermissionList = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              {roleList?.map((role: UserRole) => (
-                <SelectItem key={role.id} value={role.id}>
-                  {role.name}
-                </SelectItem>
-              ))}
+              <SelectItem value="1">Administrator</SelectItem>
+              <SelectItem value="2">Customer</SelectItem>
+              <SelectItem value="3">Guest</SelectItem>
+              <SelectItem value="4">Manager</SelectItem>
+              <SelectItem value="5">Member</SelectItem>
+              <SelectItem value="6">Owner</SelectItem>
+              <SelectItem value="7">Staff</SelectItem>
+              <SelectItem value="8">Support</SelectItem>
+              <SelectItem value="9">Vendor</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -401,7 +356,7 @@ const PermissionList = () => {
     <>
       <DataGrid
         table={table}
-        recordCount={data?.pagination.total || 0}
+        recordCount={apiData?.data?.totalElements || 0}
         isLoading={isLoading}
         tableLayout={{
           columnsResizable: true,

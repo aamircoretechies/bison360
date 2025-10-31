@@ -6,7 +6,6 @@ import { RiCheckboxCircleFill, RiErrorWarningFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,9 +25,17 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { LoaderCircleIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { UserPermission } from '@/app/models/user';
+import { PermissionItem } from '@/lib/api/types';
+import PermissionsService from '@/lib/api/permissions-service';
 import {
   PermissionSchema,
   PermissionSchemaType,
@@ -37,8 +44,20 @@ import {
 export interface PermissionEditDialogProps {
   open: boolean;
   closeDialog: () => void;
-  permission: UserPermission | null;
+  permission: PermissionItem | null;
 }
+
+const USER_ROLES = [
+  { value: 1, label: 'Administrator' },
+  { value: 2, label: 'Customer' },
+  { value: 3, label: 'Guest' },
+  { value: 4, label: 'Manager' },
+  { value: 5, label: 'Member' },
+  { value: 6, label: 'Owner' },
+  { value: 7, label: 'Staff' },
+  { value: 8, label: 'Support' },
+  { value: 9, label: 'Vendor' },
+] as const;
 
 const PermissionEditDialog = ({
   open,
@@ -50,7 +69,13 @@ const PermissionEditDialog = ({
   // Form initialization
   const form = useForm<PermissionSchemaType>({
     resolver: zodResolver(PermissionSchema),
-    defaultValues: { name: '', slug: '', description: '' },
+    defaultValues: { 
+      name: '', 
+      slug: '', 
+      description: '',
+      permission_code: 0,
+      user_role: 1,
+    },
     mode: 'onSubmit',
   });
 
@@ -58,9 +83,11 @@ const PermissionEditDialog = ({
   useEffect(() => {
     if (open) {
       form.reset({
-        name: permission?.name || '',
-        slug: permission?.slug || '',
-        description: permission?.description ?? '',
+        name: permission?.permission_name || '',
+        slug: permission?.permission_slug || '',
+        description: permission?.permission_description ?? '',
+        permission_code: permission?.permission_code || 0,
+        user_role: permission?.user_role || 1,
       });
     }
   }, [form, open, permission]);
@@ -68,30 +95,42 @@ const PermissionEditDialog = ({
   // Mutation for creating/updating permission
   const mutation = useMutation({
     mutationFn: async (values: PermissionSchemaType) => {
-      const isEdit = !!permission?.id;
-      const url = isEdit
-        ? `/api/user-management/permissions/${permission.id}`
-        : '/api/user-management/permissions';
-      const method = isEdit ? 'PUT' : 'POST';
-
-      const response = await apiFetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
+      const isEdit = !!permission?.permissions_id;
+      
+      if (isEdit) {
+        const payload = {
+          permissions_id: permission.permissions_id,
+          permission_name: values.name,
+          permission_code: values.permission_code,
+          permission_slug: values.slug,
+          permission_description: values.description || '',
+          user_role: values.user_role,
+        };
+        const response = await PermissionsService.update(payload);
+        if (response.status === 0) {
+          throw new Error(response.message || 'Failed to update permission');
+        }
+        return response;
+      } else {
+        const payload = {
+          permission_name: values.name,
+          permission_code: values.permission_code,
+          permission_slug: values.slug,
+          permission_description: values.description || '',
+          user_role: values.user_role,
+        };
+        const response = await PermissionsService.create(payload);
+        if (response.status === 0) {
+          throw new Error(response.message || 'Failed to create permission');
+        }
+        return response;
       }
-
-      return response.json();
     },
-    onSuccess: () => {
-      const isEdit = !!permission?.id;
+    onSuccess: (response) => {
+      const isEdit = !!permission?.permissions_id;
       const message = isEdit
-        ? 'Permission updated successfully'
-        : 'Permission added successfully';
+        ? (response.message || 'Permission updated successfully')
+        : (response.message || 'Permission added successfully');
 
       toast.custom(
         () => (
@@ -107,7 +146,7 @@ const PermissionEditDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['permissions'] });
       closeDialog();
     },
     onError: (error: Error) => {
@@ -164,13 +203,32 @@ const PermissionEditDialog = ({
             />
             <FormField
               control={form.control}
+              name="permission_code"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Permission Code</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number"
+                      placeholder="Enter permission code" 
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="slug"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="E.g: users:delete"
+                      placeholder="E.g: com.permission.test"
                       {...field}
                       disabled={!!permission}
                     />
@@ -192,6 +250,33 @@ const PermissionEditDialog = ({
                   <FormControl>
                     <Textarea placeholder="Enter description" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="user_role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>User Role</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(parseInt(value))}
+                    value={String(field.value || 1)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select user role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {USER_ROLES.map((role) => (
+                        <SelectItem key={role.value} value={String(role.value)}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

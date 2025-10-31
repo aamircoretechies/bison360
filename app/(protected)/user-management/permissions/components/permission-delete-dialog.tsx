@@ -3,7 +3,6 @@
 import { RiCheckboxCircleFill, RiErrorWarningFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,12 +14,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LoaderCircleIcon } from 'lucide-react';
-import { UserPermission } from '@/app/models/user';
+import { PermissionItem } from '@/lib/api/types';
+import PermissionsService from '@/lib/api/permissions-service';
 
 export interface PermissionDeleteDialogProps {
   open: boolean;
   closeDialog: () => void;
-  permission: UserPermission;
+  permission: PermissionItem;
 }
 
 const PermissionDeleteDialog = ({
@@ -33,22 +33,18 @@ const PermissionDeleteDialog = ({
   // Define the mutation for deleting the permission
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await apiFetch(
-        `/api/user-management/permissions/${permission.id}`,
-        {
-          method: 'DELETE',
-        },
-      );
+      const response = await PermissionsService.delete({
+        permissions_ids: String(permission.permissions_id),
+      });
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
+      if (response.status === 0) {
+        throw new Error(response.message || 'Failed to delete permission');
       }
 
-      return response.json();
+      return response;
     },
-    onSuccess: () => {
-      const message = 'Permission deleted successfully';
+    onSuccess: (response) => {
+      const message = response.message || 'Permission deleted successfully';
 
       toast.custom(
         () => (
@@ -64,7 +60,7 @@ const PermissionDeleteDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-permissions'] }); // Refetch permissions list
+      queryClient.invalidateQueries({ queryKey: ['permissions'] }); // Refetch permissions list
       closeDialog();
     },
     onError: (error: Error) => {

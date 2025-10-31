@@ -15,6 +15,13 @@ export const PermissionSchema = z.object({
     .string()
     .max(500, { message: 'Description must not exceed 500 characters.' })
     .optional(),
+  permission_code: z
+    .number()
+    .min(1, { message: 'Permission code is required.' }),
+  user_role: z
+    .number()
+    .min(1, { message: 'User role is required.' })
+    .max(9, { message: 'Invalid user role.' }),
 });
 
 export type PermissionSchemaType = z.infer<typeof PermissionSchema>;

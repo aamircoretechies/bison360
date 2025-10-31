@@ -3,7 +3,6 @@
 import { RiCheckboxCircleFill, RiErrorWarningFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { LoaderCircleIcon } from 'lucide-react';
+import PermissionsService from '@/lib/api/permissions-service';
 
 const PermissionGroupDeleteDialog = ({
   open,
@@ -30,26 +30,18 @@ const PermissionGroupDeleteDialog = ({
   // Define the mutation for deleting permissions
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await apiFetch(
-        '/api/user-management/permissions/delete',
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ permissionIds }),
-        },
-      );
+      const response = await PermissionsService.delete({
+        permissions_ids: permissionIds.join(','),
+      });
 
-      if (!response.ok) {
-        const { message } = await response.json();
-        throw new Error(message);
+      if (response.status === 0) {
+        throw new Error(response.message || 'Failed to delete permissions');
       }
 
-      return response.json();
+      return response;
     },
-    onSuccess: () => {
-      const message = 'Permissions deleted successfully.';
+    onSuccess: (response) => {
+      const message = response.message || 'Permissions deleted successfully.';
       toast.custom(
         () => (
           <Alert variant="mono" icon="success">
@@ -64,7 +56,7 @@ const PermissionGroupDeleteDialog = ({
         },
       );
 
-      queryClient.invalidateQueries({ queryKey: ['user-permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['permissions'] });
       closeDialog();
     },
     onError: (error: Error) => {
