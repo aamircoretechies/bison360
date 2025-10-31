@@ -12,9 +12,15 @@ import { useSettings } from '@/providers/settings-provider';
 import { Button } from '@/components/ui/button';
 import { Container } from '@/components/common/container';
 import { NetworkStoreClientsContent } from '@/app/(protected)/inventory/barcodes/content';
+import { useBarcodeQuery } from '@/lib/api/hooks/use-barcode-query';
 
 export default function NetworkStoreClientsPage() {
   const { settings } = useSettings();
+  const { data: barcodeData } = useBarcodeQuery({}); // Fetch all data for counts
+
+  const statusCounts = barcodeData?.data?.status_counts || {};
+  const allBarcodes = Object.values(statusCounts).reduce((sum, count) => sum + count, 0);
+  const activeBarcodes = statusCounts['1'] || 0; // Assuming '1' is Active status
 
   return (
     <Fragment>
@@ -29,13 +35,13 @@ export default function NetworkStoreClientsPage() {
                     All SKUs:
                   </span>
                   <span className="text-base text-ray-800 font-semibold me-2">
-                    8
+                    {allBarcodes}
                   </span>
                   <span className="text-base text-secondary-foreground">
                     Active
                   </span>
                   <span className="text-base text-foreground font-semibold">
-                    4
+                    {activeBarcodes}
                   </span>
                 </div>
               </ToolbarDescription>

@@ -116,6 +116,17 @@ export const API_MODULES = {
     UPDATE: 'stock-level/update',
     DELETE: 'stock-level/delete',
   },
+
+  // Barcodes
+  BARCODES: {
+    BASE: 'barcodes',
+    GET_ALL: 'barcodes/get-all',
+    CREATE: 'barcodes/create',
+    UPDATE: 'barcodes/update',
+    ADJUST_QUANTITY: 'barcodes/adjust-quantity',
+    SET_PRINT_STATUS: 'barcodes/set-print-status',
+    DELETE: 'barcodes/delete',
+  },
   
   // Livestock Management
   LIVESTOCK: {

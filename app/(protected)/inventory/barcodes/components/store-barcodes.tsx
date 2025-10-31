@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu } from '@radix-ui/react-dropdown-menu';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import {
@@ -16,9 +16,8 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { EllipsisVertical, Filter, Search, Settings2, X, Printer } from 'lucide-react';
+import { EllipsisVertical, Filter, Search, Settings2, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -54,6 +53,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useBarcodeQuery } from '@/lib/api/hooks/use-barcode-query';
+import BarcodeService from '@/lib/api/barcode-service';
+import { BarcodeItem } from '@/lib/api/types';
+import { AdjustBarcodeQuantityDialog, PrintBarcodeDialog } from './index';
 
 interface IProductData {
   id: string;
@@ -63,148 +66,18 @@ interface IProductData {
   quantity: number;
   location: string;
   expiry: string;
-  status: 'Active' | 'Expiry Soon' | 'Expired' | 'Low Stock';
+  status: 'Active' | 'Expiring Soon' | 'Out of Stock' | 'Low Stock';
   barcodeStatus: 'Print Active' | 'Print Pending' | 'Printed' | 'Print Error';
+  originalData?: BarcodeItem;
 }
 
-const data: IProductData[] = [
-  {
-    id: '1',
-    skuCode: 'MT-001-23',
-    productName: 'Ground Bison',
-    batchNumber: 'B-1001',
-    quantity: 120,
-    location: 'Freezer A1',
-    expiry: '15 Aug',
-    status: 'Active',
-    barcodeStatus: 'Print Active',
-  },
-  {
-    id: '2',
-    skuCode: 'MT-002-23',
-    productName: 'Ribeye',
-    batchNumber: 'B-10026',
-    quantity: 0,
-    location: 'A2-S1',
-    expiry: '10 Aug',
-    status: 'Expiry Soon',
-    barcodeStatus: 'Print Pending',
-  },
-  {
-    id: '3',
-    skuCode: 'MT-003-23',
-    productName: 'Chicken Breast',
-    batchNumber: 'B-10035',
-    quantity: 45,
-    location: 'B1-S3',
-    expiry: '18 Aug',
-    status: 'Active',
-    barcodeStatus: 'Printed',
-  },
-  {
-    id: '4',
-    skuCode: 'MT-004-23',
-    productName: 'Salmon Fillet',
-    batchNumber: 'B-10042',
-    quantity: 12,
-    location: 'C2-S1',
-    expiry: '12 Aug',
-    status: 'Expiry Soon',
-    barcodeStatus: 'Print Active',
-  },
-  {
-    id: '5',
-    skuCode: 'MT-005-23',
-    productName: 'Pork Chops',
-    batchNumber: 'B-10058',
-    quantity: 5,
-    location: 'A3-S2',
-    expiry: '20 Aug',
-    status: 'Low Stock',
-    barcodeStatus: 'Print Error',
-  },
-  {
-    id: '6',
-    skuCode: 'MT-006-23',
-    productName: 'Turkey Breast',
-    batchNumber: 'B-10063',
-    quantity: 30,
-    location: 'B2-S4',
-    expiry: '25 Aug',
-    status: 'Active',
-    barcodeStatus: 'Printed',
-  },
-  {
-    id: '7',
-    skuCode: 'MT-007-23',
-    productName: 'Lamb Chops',
-    batchNumber: 'B-10071',
-    quantity: 0,
-    location: 'C1-S3',
-    expiry: '08 Aug',
-    status: 'Expired',
-    barcodeStatus: 'Print Pending',
-  },
-  {
-    id: '8',
-    skuCode: 'MT-008-23',
-    productName: 'Duck Breast',
-    batchNumber: 'B-10089',
-    quantity: 18,
-    location: 'A1-S4',
-    expiry: '22 Aug',
-    status: 'Active',
-    barcodeStatus: 'Print Active',
-  },
-];
-
-function ActionsCell({ row }: { row: Row<IProductData> }) {
-  const { copyToClipboard } = useCopyToClipboard();
-  const handleCopySKU = () => {
-    copyToClipboard(String(row.original.skuCode));
-    const message = `SKU Code successfully copied: ${row.original.skuCode}`;
-    toast.custom(
-      (t) => (
-        <Alert
-          variant="mono"
-          icon="success"
-          close={false}
-          onClose={() => toast.dismiss(t)}
-        >
-          <AlertIcon>
-            <RiCheckboxCircleFill />
-          </AlertIcon>
-          <AlertTitle>{message}</AlertTitle>
-        </Alert>
-      ),
-      {
-        position: 'top-center',
-      },
-    );
-  };
-
-  const handlePrintBarcode = () => {
-    const message = `Barcode printed for: ${row.original.productName}`;
-    toast.custom(
-      (t) => (
-        <Alert
-          variant="mono"
-          icon="success"
-          close={false}
-          onClose={() => toast.dismiss(t)}
-        >
-          <AlertIcon>
-            <RiCheckboxCircleFill />
-          </AlertIcon>
-          <AlertTitle>{message}</AlertTitle>
-        </Alert>
-      ),
-      {
-        position: 'top-center',
-      },
-    );
-  };
-
+function ActionsCell({ row, onEdit, onAdjustQty, onPrint, onDelete }: {
+  row: Row<IProductData>;
+  onEdit: (data: IProductData) => void;
+  onAdjustQty: (data: IProductData) => void;
+  onPrint: (data: IProductData) => void;
+  onDelete: (id: number) => void;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -213,12 +86,12 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="bottom" align="end">
-        <DropdownMenuItem onClick={() => {}}>Edit Product</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {}}>Adjust Quantity</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopySKU}>Copy SKU</DropdownMenuItem>
-        <DropdownMenuItem onClick={handlePrintBarcode}>Print Barcode</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(row.original)}>Edit Product</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onAdjustQty(row.original)}>Adjust Quantity</DropdownMenuItem>
+        {/* <DropdownMenuItem onClick={handleCopySKU}>Copy SKU</DropdownMenuItem> */}
+        <DropdownMenuItem onClick={() => onPrint(row.original)}>Print Barcode</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={() => {}}>
+        <DropdownMenuItem variant="destructive" onClick={() => onDelete(parseInt(row.original.id))}>
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -227,6 +100,7 @@ function ActionsCell({ row }: { row: Row<IProductData> }) {
 }
 
 const StoreProductsBarcodes = () => {
+  const router = useRouter();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 5,
@@ -238,59 +112,70 @@ const StoreProductsBarcodes = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<string>('latest');
+  const [adjustDialog, setAdjustDialog] = useState<{ open: boolean; id: number | null; currentQty?: number }>({ open: false, id: null });
+  const [printDialog, setPrintDialog] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
 
-  const filteredData = useMemo(() => {
-    let filtered = data;
+  const selectedStatusNumber = useMemo(() => {
+    const map: Record<string, number> = {
+      'Active': 1,
+      'Expiring Soon': 2,
+      'Out of Stock': 3,
+      'Low Stock': 4,
+    };
+    return selectedStatuses[0] ? map[selectedStatuses[0]] : undefined;
+  }, [selectedStatuses]);
 
-    // Filter by status
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedStatuses.includes(item.status),
-      );
-    }
+  const { data: apiData } = useBarcodeQuery({
+    page: pagination.pageIndex,
+    size: pagination.pageSize,
+    search: searchQuery || undefined,
+    status: selectedStatusNumber,
+    sort_by: sortOrder === 'oldest' ? 'oldest' : 'latest',
+  });
 
-    // Filter by search query (case-insensitive)
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.skuCode.toLowerCase().includes(searchLower) ||
-          item.productName.toLowerCase().includes(searchLower) ||
-          item.batchNumber.toLowerCase().includes(searchLower) ||
-          item.location.toLowerCase().includes(searchLower) ||
-          item.status.toLowerCase().includes(searchLower) ||
-          item.barcodeStatus.toLowerCase().includes(searchLower),
-      );
-    }
-
-    // Apply sorting based on sortOrder
-    if (sortOrder === 'latest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(b.id).getTime() - new Date(a.id).getTime(),
-      );
-    } else if (sortOrder === 'older') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    } else if (sortOrder === 'oldest') {
-      filtered = [...filtered].sort(
-        (a, b) => new Date(a.id).getTime() - new Date(b.id).getTime(),
-      );
-    }
-
-    return filtered;
-  }, [searchQuery, selectedStatuses, sortOrder]);
+  const rows = useMemo<IProductData[]>(() => {
+    const content = apiData?.data?.barcodes?.content ?? [];
+    const mapStatus = (s: number): IProductData['status'] => {
+      switch (s) {
+        case 1: return 'Active';
+        case 2: return 'Expiring Soon';
+        case 3: return 'Out of Stock';
+        case 4: return 'Low Stock';
+        default: return 'Active';
+      }
+    };
+    const mapBarcodeStatus = (s: number): IProductData['barcodeStatus'] => {
+      switch (s) {
+        case 1: return 'Print Active';
+        case 2: return 'Print Pending';
+        case 3: return 'Printed';
+        case 4: return 'Print Error';
+        default: return 'Print Active';
+      }
+    };
+    return content.map((item) => ({
+      id: String(item.bar_code_id),
+      skuCode: item.sku_code,
+      productName: item.product_name,
+      batchNumber: item.batch_number,
+      quantity: item.quantity,
+      location: item.location,
+      expiry: item.expiry_date,
+      status: mapStatus(item.status),
+      barcodeStatus: mapBarcodeStatus(item.bar_code_status),
+      originalData: item,
+    }));
+  }, [apiData]);
 
   const statusCounts = useMemo(() => {
-    return data.reduce(
-      (acc, item) => {
-        const status = item.status;
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-  }, []);
+    const counts = apiData?.data?.status_counts || {};
+    return {
+      Active: counts['1'] || 0,
+      'Expiring Soon': counts['2'] || 0,
+      'Out of Stock': counts['3'] || 0,
+      'Low Stock': counts['4'] || 0,
+    } as Record<string, number>;
+  }, [apiData]);
 
   const handleStatusChange = (checked: boolean, value: string) => {
     setSelectedStatuses((prev = []) =>
@@ -302,9 +187,9 @@ const StoreProductsBarcodes = () => {
     switch (status) {
       case 'Active':
         return 'success';
-      case 'Expiry Soon':
+      case 'Expiring Soon':
         return 'warning';
-      case 'Expired':
+      case 'Out of Stock':
         return 'destructive';
       case 'Low Stock':
         return 'info';
@@ -326,28 +211,6 @@ const StoreProductsBarcodes = () => {
       default:
         return 'secondary';
     }
-  };
-
-  const handlePrintBarcode = (row: IProductData) => {
-    const message = `Barcode printed for: ${row.productName}`;
-    toast.custom(
-      (t) => (
-        <Alert
-          variant="mono"
-          icon="success"
-          close={false}
-          onClose={() => toast.dismiss(t)}
-        >
-          <AlertIcon>
-            <RiCheckboxCircleFill />
-          </AlertIcon>
-          <AlertTitle>{message}</AlertTitle>
-        </Alert>
-      ),
-      {
-        position: 'top-center',
-      },
-    );
   };
 
   const columns = useMemo<ColumnDef<IProductData>[]>(
@@ -474,22 +337,9 @@ const StoreProductsBarcodes = () => {
           <DataGridColumnHeader title="Barcode Status" column={column} />
         ),
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            {row.original.barcodeStatus === 'Print Active' && (
-              <Button
-                mode="icon"
-                variant="ghost"
-                size="sm"
-                onClick={() => handlePrintBarcode(row.original)}
-                className="h-6 w-6"
-              >
-                📎
-              </Button>
-            )}
-            <Badge variant={getBarcodeStatusBadgeVariant(row.original.barcodeStatus)} size="sm">
-              {row.original.barcodeStatus}
-            </Badge>
-          </div>
+          <Badge variant={getBarcodeStatusBadgeVariant(row.original.barcodeStatus)} size="sm">
+            {row.original.barcodeStatus}
+          </Badge>
         ),
         enableSorting: true,
         size: 160,
@@ -506,7 +356,39 @@ const StoreProductsBarcodes = () => {
         cell: ({ row }) => {
           return (
             <div className="flex items-center gap-2">
-              <Button mode="link" underlined="dashed" size="sm">
+              <Button
+                mode="link"
+                underlined="dashed"
+                size="sm"
+                onClick={() => {
+                  const r = row.original;
+                  const statusToNumber: Record<IProductData['status'], number> = {
+                    'Active': 1,
+                    'Expiring Soon': 2,
+                    'Out of Stock': 3,
+                    'Low Stock': 4,
+                  };
+                  const barcodeStatusToNumber: Record<IProductData['barcodeStatus'], number> = {
+                    'Print Active': 1,
+                    'Print Pending': 2,
+                    'Printed': 3,
+                    'Print Error': 4,
+                  };
+                  const payload = {
+                    bar_code_id: parseInt(r.id),
+                    sku_code: r.skuCode,
+                    product_name: r.productName,
+                    batch_number: r.batchNumber,
+                    quantity: r.quantity,
+                    location: r.location,
+                    expiry_date: r.expiry,
+                    status: statusToNumber[r.status],
+                    bar_code_status: barcodeStatusToNumber[r.barcodeStatus],
+                  };
+                  const q = encodeURIComponent(JSON.stringify(payload));
+                  router.push(`/inventory/barcodes/add?mode=edit&data=${q}`);
+                }}
+              >
                 Edit
               </Button>
             </div>
@@ -517,7 +399,50 @@ const StoreProductsBarcodes = () => {
       {
         id: 'menu',
         header: '',
-        cell: ({ row }) => <ActionsCell row={row} />,
+        cell: ({ row }) => (
+          <ActionsCell
+            row={row}
+            onEdit={(r) => {
+              const statusToNumber: Record<IProductData['status'], number> = {
+                'Active': 1,
+                'Expiring Soon': 2,
+                'Out of Stock': 3,
+                'Low Stock': 4,
+              };
+              const barcodeStatusToNumber: Record<IProductData['barcodeStatus'], number> = {
+                'Print Active': 1,
+                'Print Pending': 2,
+                'Printed': 3,
+                'Print Error': 4,
+              };
+              const payload = {
+                bar_code_id: parseInt(r.id),
+                sku_code: r.skuCode,
+                product_name: r.productName,
+                batch_number: r.batchNumber,
+                quantity: r.quantity,
+                location: r.location,
+                expiry_date: r.expiry,
+                status: statusToNumber[r.status],
+                bar_code_status: barcodeStatusToNumber[r.barcodeStatus],
+              };
+              const q = encodeURIComponent(JSON.stringify(payload));
+              router.push(`/inventory/barcodes/add?mode=edit&data=${q}`);
+            }}
+            onAdjustQty={(r) => setAdjustDialog({ open: true, id: parseInt(r.id), currentQty: r.quantity })}
+            onPrint={(r) => setPrintDialog({ open: true, id: parseInt(r.id) })}
+            onDelete={async (id) => {
+              if (!confirm('Are you sure you want to delete this barcode?')) return;
+              try {
+                const res = await BarcodeService.delete({ bar_code_ids: String(id) });
+                toast.success(res.message || 'Deleted');
+                window.location.reload();
+              } catch (e: any) {
+                toast.error(e?.message || 'Delete failed');
+              }
+            }}
+          />
+        ),
         enableSorting: false,
         size: 60,
         meta: {
@@ -525,13 +450,13 @@ const StoreProductsBarcodes = () => {
         },
       },
     ],
-    [],
+    [router],
   );
 
   const table = useReactTable({
     columns,
-    data: filteredData,
-    pageCount: Math.ceil((filteredData?.length || 0) / pagination.pageSize),
+    data: rows,
+    pageCount: apiData?.data?.barcodes?.totalPages || 1,
     getRowId: (row: IProductData) => String(row.id),
     state: {
       pagination,
@@ -568,16 +493,28 @@ const StoreProductsBarcodes = () => {
   };
 
   return (
-    <DataGrid
-      table={table}
-      recordCount={filteredData?.length || 0}
-      tableLayout={{
-        columnsPinnable: true,
-        columnsMovable: true,
-        columnsVisibility: true,
-        cellBorder: true,
-      }}
-    >
+    <>
+      <AdjustBarcodeQuantityDialog
+        open={adjustDialog.open}
+        onOpenChange={(open) => setAdjustDialog({ open, id: null })}
+        barCodeId={adjustDialog.id || 0}
+        currentQuantity={adjustDialog.currentQty || 0}
+      />
+      <PrintBarcodeDialog
+        open={printDialog.open}
+        onOpenChange={(open) => setPrintDialog({ open, id: null })}
+        barCodeId={printDialog.id || 0}
+      />
+      <DataGrid
+        table={table}
+        recordCount={rows?.length || 0}
+        tableLayout={{
+          columnsPinnable: true,
+          columnsMovable: true,
+          columnsVisibility: true,
+          cellBorder: true,
+        }}
+      >
       <Card className="w-full max-w-full overflow-hidden">
         <CardHeader>
           <CardHeading>
@@ -703,6 +640,7 @@ const StoreProductsBarcodes = () => {
         </CardFooter>
       </Card>
     </DataGrid>
+    </>
   );
 };
 

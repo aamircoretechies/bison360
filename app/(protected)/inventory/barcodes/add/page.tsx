@@ -1,20 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Container } from '@/components/common/container';
 import { AddBarcodeForm } from '../components';
 import { ChevronRight } from 'lucide-react';
 
 export default function AddBarcodePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode') || 'add'; // 'add' or 'edit'
+  const dataParam = searchParams.get('data');
+  const initialData = dataParam ? JSON.parse(decodeURIComponent(dataParam)) : undefined;
 
   const handleClose = () => {
     router.push('/inventory/barcodes');
   };
 
   const handleSuccess = () => {
-    // Optionally refresh the barcodes list or show success message
     router.push('/inventory/barcodes');
   };
 
@@ -27,10 +30,15 @@ export default function AddBarcodePage() {
             Barcodes
           </Link>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground">Add New</span>
+          <span className="text-foreground">{mode === 'edit' ? 'Edit Barcode' : 'Add New'}</span>
         </nav>
         
-        <AddBarcodeForm onClose={handleClose} onSuccess={handleSuccess} />
+        <AddBarcodeForm 
+          onClose={handleClose} 
+          onSuccess={handleSuccess} 
+          mode={mode as 'add' | 'edit'}
+          initialData={initialData}
+        />
       </div>
     </Container>
   );

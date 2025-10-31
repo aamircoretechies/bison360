@@ -8,10 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RiCheckboxCircleFill } from '@remixicon/react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import BarcodeService from '@/lib/api/barcode-service';
+import { BarcodeCreateRequest, BarcodeUpdateRequest } from '@/lib/api/types';
 
 interface AddBarcodeFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  mode?: 'add' | 'edit';
+  initialData?: Partial<BarcodeUpdateRequest> & { status?: number; bar_code_status?: number };
 }
 
 interface BarcodeFormData {
@@ -20,21 +25,45 @@ interface BarcodeFormData {
   batchNumber: string;
   quantity: number;
   location: string;
-  expiry: string;
-  status: 'Active' | 'Expiry Soon' | 'Expired' | 'Low Stock';
-  barcodeStatus: 'Print Active' | 'Print Pending' | 'Printed' | 'Print Error';
+  expiry: string; // dd/mm/yyyy
+  status: string; // 'Active' | 'Expiring Soon' | 'Out of Stock' | 'Low Stock'
+  barcodeStatus: string; // 'Print Active' | 'Print Pending' | 'Printed' | 'Print Error'
 }
 
-export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
+export function AddBarcodeForm({ onClose, onSuccess, mode = 'add', initialData }: AddBarcodeFormProps) {
+  const queryClient = useQueryClient();
+  
+  const initStatus = (() => {
+    const s: any = initialData?.status;
+    if (typeof s === 'number') {
+      return BarcodeService.mapStatusToLabel(s);
+    }
+    if (typeof s === 'string') {
+      return s || 'Active';
+    }
+    return 'Active';
+  })();
+
+  const initBarcodeStatus = (() => {
+    const s: any = initialData?.bar_code_status;
+    if (typeof s === 'number') {
+      return BarcodeService.mapBarcodeStatusToLabel(s);
+    }
+    if (typeof s === 'string') {
+      return s || 'Print Active';
+    }
+    return 'Print Active';
+  })();
+
   const [formData, setFormData] = useState<BarcodeFormData>({
-    skuCode: '',
-    productName: '',
-    batchNumber: '',
-    quantity: 0,
-    location: '',
-    expiry: '',
-    status: 'Active',
-    barcodeStatus: 'Print Active',
+    skuCode: (initialData?.sku_code as string) || '',
+    productName: (initialData?.product_name as string) || '',
+    batchNumber: (initialData?.batch_number as string) || '',
+    quantity: (initialData?.quantity as number) || 0,
+    location: (initialData?.location as string) || '',
+    expiry: (initialData?.expiry_date as string) || '',
+    status: initStatus,
+    barcodeStatus: initBarcodeStatus,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,8 +74,6 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
 
     if (!formData.skuCode.trim()) {
       newErrors.skuCode = 'SKU Code is required';
-    } else if (!/^[A-Z]{2}-\d{3}-\d{2}$/.test(formData.skuCode)) {
-      newErrors.skuCode = 'SKU Code must be in format XX-XXX-XX';
     }
 
     if (!formData.productName.trim()) {
@@ -83,10 +110,42 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const statusNumber = BarcodeService.mapStatusToNumber(formData.status);
+      const barcodeStatusNumber = BarcodeService.mapBarcodeStatusToNumber(formData.barcodeStatus);
 
-      // Show success message
+      let response;
+      if (mode === 'edit' && initialData?.bar_code_id) {
+        const payload: BarcodeUpdateRequest = {
+          bar_code_id: initialData.bar_code_id,
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          location: formData.location,
+          expiry_date: formData.expiry,
+          status: statusNumber,
+          bar_code_status: barcodeStatusNumber,
+        };
+        response = await BarcodeService.update(payload);
+      } else {
+        const payload: BarcodeCreateRequest = {
+          sku_code: formData.skuCode,
+          product_name: formData.productName,
+          batch_number: formData.batchNumber,
+          quantity: formData.quantity,
+          location: formData.location,
+          expiry_date: formData.expiry,
+          status: statusNumber,
+          bar_code_status: barcodeStatusNumber,
+        };
+        response = await BarcodeService.create(payload);
+      }
+
+      if (response.status === 0) {
+        alert(response.message || 'Failed to save barcode.');
+        return;
+      }
+
       toast.custom(
         (t) => (
           <Alert
@@ -97,7 +156,7 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
           >
             <RiCheckboxCircleFill />
             <AlertDescription>
-              Barcode "{formData.productName}" added successfully!
+              {response.message || `${mode === 'edit' ? 'Barcode updated' : 'Barcode created'} successfully!`}
             </AlertDescription>
           </Alert>
         ),
@@ -106,10 +165,11 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
         }
       );
 
+      queryClient.invalidateQueries({ queryKey: ['barcodes'] });
       onSuccess?.();
       onClose();
-    } catch (error) {
-      toast.error('Failed to add barcode. Please try again.');
+    } catch (error: any) {
+      toast.error(error?.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} barcode. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +193,7 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Add New Barcode</CardTitle>
+        <CardTitle>{mode === 'edit' ? 'Edit Barcode' : 'Add New Barcode'}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-6">
@@ -214,7 +274,8 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
               <Label htmlFor="expiry">Expiry Date *</Label>
               <Input
                 id="expiry"
-                type="date"
+                type="text"
+                placeholder="dd/mm/yyyy"
                 value={formData.expiry}
                 onChange={(e) => handleInputChange('expiry', e.target.value)}
                 className={errors.expiry ? 'border-destructive' : ''}
@@ -230,11 +291,11 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
                 id="status"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.status}
-                onChange={(e) => handleInputChange('status', e.target.value as BarcodeFormData['status'])}
+                onChange={(e) => handleInputChange('status', e.target.value)}
               >
                 <option value="Active">Active</option>
-                <option value="Expiry Soon">Expiry Soon</option>
-                <option value="Expired">Expired</option>
+                <option value="Expiring Soon">Expiring Soon</option>
+                <option value="Out of Stock">Out of Stock</option>
                 <option value="Low Stock">Low Stock</option>
               </select>
             </div>
@@ -245,7 +306,7 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
                 id="barcodeStatus"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.barcodeStatus}
-                onChange={(e) => handleInputChange('barcodeStatus', e.target.value as BarcodeFormData['barcodeStatus'])}
+                onChange={(e) => handleInputChange('barcodeStatus', e.target.value)}
               >
                 <option value="Print Active">Print Active</option>
                 <option value="Print Pending">Print Pending</option>
@@ -269,7 +330,7 @@ export function AddBarcodeForm({ onClose, onSuccess }: AddBarcodeFormProps) {
             variant="primary"
             disabled={!isFormValid || isSubmitting}
           >
-            {isSubmitting ? 'Adding...' : 'Add Barcode'}
+            {isSubmitting ? (mode === 'edit' ? 'Updating...' : 'Adding...') : (mode === 'edit' ? 'Update Barcode' : 'Add Barcode')}
           </Button>
         </CardFooter>
       </form>

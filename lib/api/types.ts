@@ -479,6 +479,124 @@ export interface StockDeleteResponse {
   status: number;
 }
 
+// Barcode API Types
+export interface BarcodeItem {
+  bar_code_id: number;
+  sku_code: string;
+  product_name: string;
+  batch_number: string;
+  quantity: number;
+  location: string;
+  expiry_date: string; // dd/mm/yyyy
+  status: number; // 1 Active, 2 Expiring Soon, 3 Out of Stock, 4 Low Stock
+  bar_code_status: number; // 1 Print Active, 2 Print Pending, 3 Printed, 4 Print Error
+  created: string;
+  updated: string | null;
+  deleted: number;
+  bar_code_image: string;
+}
+
+export interface BarcodesRequest {
+  page?: number;
+  size?: number;
+  search?: string;
+  status?: number; // optional filter
+  sort_by?: 'latest' | 'oldest';
+}
+
+export interface BarcodesData {
+  barcodes: {
+    content: BarcodeItem[];
+    pageable: Pageable;
+    last: boolean;
+    totalPages: number;
+    totalElements: number;
+    first: boolean;
+    size: number;
+    number: number;
+    sort: {
+      sorted: boolean;
+      empty: boolean;
+      unsorted: boolean;
+    };
+    numberOfElements: number;
+    empty: boolean;
+  };
+  status_counts: Record<string, number>;
+}
+
+export interface BarcodesResponse {
+  data: BarcodesData;
+  message: string;
+  status: number;
+}
+
+export interface BarcodeCreateRequest {
+  sku_code: string;
+  product_name: string;
+  batch_number: string;
+  location: string;
+  expiry_date: string; // dd/mm/yyyy
+  status: number; // 1..4
+  bar_code_status: number; // 1..4
+  quantity: number;
+}
+
+export interface BarcodeCreateResponse {
+  data: BarcodeItem;
+  message: string;
+  status: number;
+}
+
+export interface BarcodeUpdateRequest {
+  bar_code_id: number;
+  sku_code?: string;
+  product_name?: string;
+  batch_number?: string;
+  location?: string;
+  expiry_date?: string;
+  status?: number;
+  bar_code_status?: number;
+  quantity?: number;
+}
+
+export interface BarcodeUpdateResponse {
+  data: BarcodeItem;
+  message: string;
+  status: number;
+}
+
+export interface BarcodeAdjustQuantityRequest {
+  bar_code_id: number;
+  quantity_adjustment: number;
+}
+
+export interface BarcodeAdjustQuantityResponse {
+  data: BarcodeItem;
+  message: string;
+  status: number;
+}
+
+export interface BarcodeSetPrintStatusRequest {
+  bar_code_id: number;
+  print_status: number; // always 2 for pending
+}
+
+export interface BarcodeSetPrintStatusResponse {
+  data: BarcodeItem;
+  message: string;
+  status: number;
+}
+
+export interface BarcodeDeleteRequest {
+  bar_code_ids: string; // comma separated ids
+}
+
+export interface BarcodeDeleteResponse {
+  message: string;
+  status: number;
+}
+
 export interface RegisterRequest {
   email: string;
   password: string;
