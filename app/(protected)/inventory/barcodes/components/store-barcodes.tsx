@@ -113,7 +113,12 @@ const StoreProductsBarcodes = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOrder, setSortOrder] = useState<string>('latest');
   const [adjustDialog, setAdjustDialog] = useState<{ open: boolean; id: number | null; currentQty?: number }>({ open: false, id: null });
-  const [printDialog, setPrintDialog] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+  const [printDialog, setPrintDialog] = useState<{ 
+    open: boolean; 
+    id: number | null; 
+    barCodeImage?: string;
+    productName?: string;
+  }>({ open: false, id: null });
 
   const selectedStatusNumber = useMemo(() => {
     const map: Record<string, number> = {
@@ -430,7 +435,15 @@ const StoreProductsBarcodes = () => {
               router.push(`/inventory/barcodes/add?mode=edit&data=${q}`);
             }}
             onAdjustQty={(r) => setAdjustDialog({ open: true, id: parseInt(r.id), currentQty: r.quantity })}
-            onPrint={(r) => setPrintDialog({ open: true, id: parseInt(r.id) })}
+            onPrint={(r) => {
+              const barcodeData = r.originalData;
+              setPrintDialog({ 
+                open: true, 
+                id: parseInt(r.id),
+                barCodeImage: barcodeData?.bar_code_image,
+                productName: r.productName,
+              });
+            }}
             onDelete={async (id) => {
               if (!confirm('Are you sure you want to delete this barcode?')) return;
               try {
@@ -504,6 +517,8 @@ const StoreProductsBarcodes = () => {
         open={printDialog.open}
         onOpenChange={(open) => setPrintDialog({ open, id: null })}
         barCodeId={printDialog.id || 0}
+        barCodeImage={printDialog.barCodeImage}
+        productName={printDialog.productName}
       />
       <DataGrid
         table={table}
